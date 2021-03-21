@@ -1,5 +1,12 @@
-import { Router, Worker } from "mediasoup/lib/types"
-import WebSocket from "ws"
+import {
+  DtlsParameters,
+  DtlsState,
+  MediaKind,
+  Router,
+  RtpCapabilities,
+  RtpParameters,
+  Worker,
+} from "mediasoup/lib/types"
 import config from "./config"
 import Peer from "./peer"
 import { RoomPeers, WorkerInfo } from "./types"
@@ -9,27 +16,24 @@ export default class Room {
   worker: Worker
   router: Router
   peers: RoomPeers
-  io: WebSocket
 
-  constructor(roomId: string, workerInfo: WorkerInfo, io: WebSocket) {
+  constructor(roomId: string, workerInfo: WorkerInfo) {
     this.id = roomId
-    const mediaCodecs = config.mediasoup.router.mediaCodecs
     this.worker = workerInfo.worker
     this.router = workerInfo.router
     this.peers = {}
-    this.io = io
   }
 
   addPeer(peer: Peer) {
     this.peers[peer.id] = peer
   }
 
-  getProducerListForPeer(socketId: string) {
+  getProducerList() {
     let producerList = []
     Object.values(this.peers).forEach(peer => {
-      peer.producers.forEach(producer => {
+      Object.values(peer._producers).forEach(producer => {
         producerList.push({
-          producer_id: producer.id,
+          producerId: producer.id,
         })
       })
     })
@@ -40,7 +44,7 @@ export default class Room {
     return this.router.rtpCapabilities
   }
 
-  async createWebRtcTransport(socket_id) {
+  async createWebRtcTransport(peer: Peer) {
     const {
       maxIncomingBitrate,
       initialAvailableOutgoingBitrate,
@@ -53,33 +57,27 @@ export default class Room {
       preferUdp: true,
       initialAvailableOutgoingBitrate,
     })
+
     if (maxIncomingBitrate) {
       try {
         await transport.setMaxIncomingBitrate(maxIncomingBitrate)
       } catch (error) {}
     }
 
-    transport.on(
-      "dtlsstatechange",
-      function (dtlsState) {
-        if (dtlsState === "closed") {
-          console.log(
-            "---transport close--- " +
-              this.peers.get(socket_id).name +
-              " closed"
-          )
-          transport.close()
-        }
-      }.bind(this)
-    )
+    transport.on("dtlsstatechange", (dtlsState: DtlsState) => {
+      if (dtlsState === "closed") {
+        console.log("---transport close--- " + peer.id + " closed")
+        transport.close()
+      }
+    })
 
     transport.on("close", () => {
-      console.log(
-        "---transport close--- " + this.peers.get(socket_id).name + " closed"
-      )
+      console.log("---transport close--- " + peer.id + " closed")
     })
+
     console.log("---adding transport---", transport.id)
-    this.peers.get(socket_id).addTransport(transport)
+    peer.addTransport(transport)
+
     return {
       params: {
         id: transport.id,
@@ -90,41 +88,46 @@ export default class Room {
     }
   }
 
-  async connectPeerTransport(socket_id, transport_id, dtlsParameters) {
-    if (!this.peers.has(socket_id)) return
-    await this.peers
-      .get(socket_id)
-      .connectTransport(transport_id, dtlsParameters)
+  async connectPeerTransport(
+    peer: Peer,
+    transportId: string,
+    dtlsParameters: DtlsParameters
+  ) {
+    await peer.connectTransport(transportId, dtlsParameters)
   }
 
-  async produce(socket_id, producerTransportId, rtpParameters, kind) {
-    // handle undefined errors
-    return new Promise(
-      async function (resolve, reject) {
-        let producer = await this.peers
-          .get(socket_id)
-          .createProducer(producerTransportId, rtpParameters, kind)
-        resolve(producer.id)
-        this.broadCast(socket_id, "newProducers", [
-          {
-            producer_id: producer.id,
-            producer_socket_id: socket_id,
-          },
-        ])
-      }.bind(this)
+  async produce(
+    peer: Peer,
+    producerTransportId: string,
+    rtpParameters: RtpParameters,
+    kind: MediaKind
+  ): Promise<string> {
+    const producer = await peer.createProducer(
+      producerTransportId,
+      rtpParameters,
+      kind
     )
+
+    this.broadcast(peer, "newProducers", [
+      {
+        producerId: producer.id,
+        producerPeerId: peer.id,
+      },
+    ])
+
+    return producer.id
   }
 
   async consume(
-    socket_id,
-    consumer_transport_id,
-    producer_id,
-    rtpCapabilities
+    socketId: string,
+    consumerTransportId: string,
+    producerId: string,
+    rtpCapabilities: RtpCapabilities
   ) {
     // handle nulls
     if (
       !this.router.canConsume({
-        producerId: producer_id,
+        producerId,
         rtpCapabilities,
       })
     ) {
@@ -132,58 +135,53 @@ export default class Room {
       return
     }
 
-    let { consumer, params } = await this.peers
-      .get(socket_id)
-      .createConsumer(consumer_transport_id, producer_id, rtpCapabilities)
+    const peer = this.peers[socketId]
 
-    consumer.on(
-      "producerclose",
-      function () {
-        console.log(
-          `---consumer closed--- due to producerclose event  name:${
-            this.peers.get(socket_id).name
-          } consumer_id: ${consumer.id}`
-        )
-        this.peers.get(socket_id).removeConsumer(consumer.id)
-        // tell client consumer is dead
-        this.io.to(socket_id).emit("consumerClosed", {
-          consumer_id: consumer.id,
-        })
-      }.bind(this)
+    const { consumer, params } = await peer.createConsumer(
+      consumerTransportId,
+      producerId,
+      rtpCapabilities
     )
+
+    consumer.on("producerclose", () => {
+      console.log(
+        `---consumer closed--- due to producerclose event  id:${peer.id} consumer_id: ${consumer.id}`
+      )
+      peer.removeConsumer(consumer.id)
+      // tell client consumer is dead
+
+      peer.send("consumerClosed", { consumerId: consumer.id })
+    })
 
     return params
   }
 
-  async removePeer(socket_id) {
-    this.peers.get(socket_id).close()
-    this.peers.delete(socket_id)
+  async removePeer(peer: Peer) {
+    this.peers[peer.id].close()
+
+    delete this.peers[peer.id]
   }
 
-  closeProducer(socket_id, producer_id) {
-    this.peers.get(socket_id).closeProducer(producer_id)
+  closeProducer(peer: Peer, producerId: string) {
+    peer.closeProducer(producerId)
   }
 
-  broadCast(socket_id, name, data) {
-    for (let otherID of Array.from(this.peers.keys()).filter(
-      id => id !== socket_id
-    )) {
-      this.send(otherID, name, data)
+  broadcast(fromPeer: Peer, type: string, data: any) {
+    for (let peer of Object.values(this.peers)) {
+      if (fromPeer.id !== peer.id) {
+        peer.send(type, data)
+      }
     }
-  }
-
-  send(socket_id, name, data) {
-    this.io.to(socket_id).emit(name, data)
   }
 
   getPeers() {
     return this.peers
   }
 
-  toJson() {
+  json() {
     return {
       id: this.id,
-      peers: JSON.stringify([...this.peers]),
+      peers: JSON.stringify(this.peers),
     }
   }
 }

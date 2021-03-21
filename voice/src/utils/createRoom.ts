@@ -1,28 +1,24 @@
+import Room from "../room"
 import { Rooms } from "../types"
+import { getMediasoupWorker } from "../index"
+import { SendDataFn } from "./handleMessage"
 
 interface Params {
   roomId: string
 }
 
-export default async function createRoom(roomId: string, rooms: Rooms) {
-  if (roomId in rooms) {
-    callback("already exists")
+export default async function createRoom(
+  roomId: string,
+  rooms: Rooms,
+  send: SendDataFn
+) {
+  if (rooms.hasOwnProperty(roomId)) {
+    send("createRoom_cb", "already exists")
   } else {
-    console.log("---created room--- ", room_id)
-    let worker = await getMediasoupWorker()
-    rooms[roomId] = 
-    roomList.set(room_id, new Room(room_id, worker, wss))
-    callback(room_id)
+    const workerInfo = getMediasoupWorker()
+    rooms[roomId] = new Room(roomId, workerInfo)
+    send("createRoom_cb", roomId)
+
+    console.log("---created room--- ", roomId)
   }
-}
-
-/**
- * Get next mediasoup Worker.
- */
-function getMediasoupWorker() {
-  const worker = workers[nextMediasoupWorkerIdx]
-
-  if (++nextMediasoupWorkerIdx === workers.length) nextMediasoupWorkerIdx = 0
-
-  return worker
 }

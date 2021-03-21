@@ -7,30 +7,29 @@ import {
   MediaKind,
   RtpCapabilities,
 } from "mediasoup/lib/types"
+import WebSocket from "ws"
+import sendData from "./utils/sendData"
 
 export default class Peer {
   id: string
-  name: string
+  _socket: WebSocket
 
-  transports: Map<string, Transport>
-  consumers: Map<string, Consumer>
-  producers: Map<string, Producer>
+  _transports: Record<string, Transport> = {}
+  _consumers: Record<string, Consumer> = {}
+  _producers: Record<string, Producer> = {}
 
-  constructor(socketId: string, name: string) {
-    this.id = socketId
-    this.name = name
-    this.transports = new Map()
-    this.consumers = new Map()
-    this.producers = new Map()
+  constructor(peerId: string, socket: WebSocket) {
+    this.id = peerId
+    this._socket = socket
   }
 
   addTransport(transport: Transport) {
-    this.transports.set(transport.id, transport)
+    this._transports[transport.id] = transport
   }
 
   async connectTransport(transportId: string, dtlsParameters: DtlsParameters) {
-    if (!this.transports.has(transportId)) return
-    await this.transports.get(transportId).connect({
+    if (!this._transports.hasOwnProperty(transportId)) return
+    await this._transports[transportId].connect({
       dtlsParameters: dtlsParameters,
     })
   }
@@ -41,23 +40,21 @@ export default class Peer {
     kind: MediaKind
   ) {
     //TODO handle null errors
-    const producer = await this.transports.get(producerTransportId).produce({
+    const producer = await this._transports[producerTransportId].produce({
       kind,
       rtpParameters,
     })
 
-    this.producers.set(producer.id, producer)
+    this._producers[producer.id] = producer
 
-    producer.on(
-      "transportclose",
-      function () {
-        console.log(
-          `---producer transport close--- name: ${this.name} consumer_id: ${producer.id}`
-        )
-        producer.close()
-        this.producers.delete(producer.id)
-      }.bind(this)
-    )
+    producer.on("transportclose", () => {
+      console.log(
+        `---producer transport close--- id: ${this.id} consumer_id: ${producer.id}`
+      )
+      producer.close()
+
+      delete this._producers[producer.id]
+    })
 
     return producer
   }
@@ -67,7 +64,7 @@ export default class Peer {
     producerId: string,
     rtpCapabilities: RtpCapabilities
   ) {
-    let consumerTransport = this.transports.get(consumerTransportId)
+    const consumerTransport = this._transports[consumerTransportId]
 
     let consumer = null
     try {
@@ -88,17 +85,15 @@ export default class Peer {
       })
     }
 
-    this.consumers.set(consumer.id, consumer)
+    this._consumers[consumer.id] = consumer
 
-    consumer.on(
-      "transportclose",
-      function () {
-        console.log(
-          `---consumer transport close--- name: ${this.name} consumer_id: ${consumer.id}`
-        )
-        this.consumers.delete(consumer.id)
-      }.bind(this)
-    )
+    consumer.on("transportclose", () => {
+      console.log(
+        `---consumer transport close--- id: ${this.id} consumer_id: ${consumer.id}`
+      )
+
+      delete this._consumers[consumer.id]
+    })
 
     return {
       consumer,
@@ -113,25 +108,29 @@ export default class Peer {
     }
   }
 
+  send(type: string, data: any) {
+    sendData(this._socket, type, data)
+  }
+
   closeProducer(producerId: string) {
     try {
-      this.producers.get(producerId).close()
+      this._producers[producerId].close()
     } catch (e) {
       console.warn(e)
     }
 
-    this.producers.delete(producerId)
+    delete this._producers[producerId]
   }
 
   getProducer(producerId: string) {
-    return this.producers.get(producerId)
+    return this._producers[producerId]
   }
 
   close() {
-    this.transports.forEach(transport => transport.close())
+    Object.values(this._transports).forEach(transport => transport.close())
   }
 
   removeConsumer(consumerId: string) {
-    this.consumers.delete(consumerId)
+    delete this._consumers[consumerId]
   }
 }

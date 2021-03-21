@@ -5,11 +5,13 @@ import mediasoup from "mediasoup"
 import * as path from "path"
 
 import config from "./config"
+import * as uuid from "uuid"
 import Room from "./room"
 import Peer from "./peer"
 import handleMessage from "./utils/handleMessage"
 import startMediasoup from "./utils/startMediasoup"
 import { WorkerInfo } from "./types"
+import sendData from "./utils/sendData"
 
 const app = express()
 
@@ -27,25 +29,28 @@ let nextMediasoupWorkerIdx = 0
 const workers: WorkerInfo[] = []
 const rooms = {}
 
+/**
+ * Get next mediasoup Worker.
+ */
+export function getMediasoupWorker() {
+  const worker = workers[nextMediasoupWorkerIdx]
+
+  if (++nextMediasoupWorkerIdx === workers.length) nextMediasoupWorkerIdx = 0
+
+  return worker
+}
+
 async function main() {
   const workers = await startMediasoup()
 
   wss.on("connection", ws => {
-    ws.on("message", handleMessage)
-    ws.on("createRoom")
+    function sendDataWrapper(type: string, data: any) {
+      sendData(ws, type, data)
+    }
 
-    ws.on("join", ({ room_id, name }, cb) => {
-      console.log('---user joined--- "' + room_id + '": ' + name)
-      if (!roomList.has(room_id)) {
-        return cb({
-          error: "room does not exist",
-        })
-      }
-      roomList.get(room_id).addPeer(new Peer(ws.id, name))
-      ws.room_id = room_id
+    const socketInfo = { id: uuid.v4(), socket: ws, sendData: sendDataWrapper }
 
-      cb(roomList.get(room_id).toJson())
-    })
+    ws.on("message", handleMessage(socketInfo))
 
     ws.on("getProducers", () => {
       console.log(
