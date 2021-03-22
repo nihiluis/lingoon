@@ -119,7 +119,7 @@ export default class Room {
   }
 
   async consume(
-    socketId: string,
+    peer: Peer,
     consumerTransportId: string,
     producerId: string,
     rtpCapabilities: RtpCapabilities
@@ -134,8 +134,6 @@ export default class Room {
       console.error("can not consume")
       return
     }
-
-    const peer = this.peers[socketId]
 
     const { consumer, params } = await peer.createConsumer(
       consumerTransportId,

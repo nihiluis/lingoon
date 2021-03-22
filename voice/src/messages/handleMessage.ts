@@ -1,8 +1,11 @@
 import WebSocket from "ws"
 import { SocketInfo } from "../types"
 import createRoom from "./createRoom"
+import getProducers from "./getProducers"
+import joinRoom from "./joinRoom"
 import sendData from "./sendData"
 
+const handlers: Record<string, (data: any) => void> = {}
 
 export default function handleMessage(socketInfo: SocketInfo) {
   const { id, socket, sendData } = socketInfo
@@ -13,12 +16,15 @@ export default function handleMessage(socketInfo: SocketInfo) {
     const type = body.type
     const data = body.data
 
-    switch (type) {
-      case "createRoom":
-        createRoom(data.roomId, {}, sendData)
-        break
-      case "join":
-        break
+    const messageHandler = handlers[type]
+    if (!messageHandler) {
+      return
     }
+
+    messageHandler(data)
   }
+}
+
+export function registerMessage(type: string, fn: (data: any) => void) {
+  handlers[type] = fn
 }

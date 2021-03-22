@@ -8,7 +8,7 @@ import {
   RtpCapabilities,
 } from "mediasoup/lib/types"
 import WebSocket from "ws"
-import sendData from "./utils/sendData"
+import sendData from "./messages/sendData"
 
 export default class Peer {
   id: string

@@ -1,17 +1,30 @@
 import express from "express"
 import * as http from "http"
 import ws from "ws"
-import mediasoup from "mediasoup"
 import * as path from "path"
 
 import config from "./config"
 import * as uuid from "uuid"
 import Room from "./room"
 import Peer from "./peer"
-import handleMessage from "./utils/handleMessage"
-import startMediasoup from "./utils/startMediasoup"
-import { WorkerInfo } from "./types"
-import sendData from "./utils/sendData"
+import handleMessage, { registerMessage } from "./messages/handleMessage"
+import startMediasoup from "./messages/startMediasoup"
+import { Rooms, SocketInfo, WorkerInfo } from "./types"
+import sendData from "./messages/sendData"
+import createRoom from "./messages/createRoom"
+import joinRoom from "./messages/joinRoom"
+import getProducers from "./messages/getProducers"
+import getRouterRtpCapabilities from "./messages/getRouterRtpCapabilities"
+import createWebRtcTransport from "./messages/createWebRtcTransport"
+import {
+  DtlsParameters,
+  MediaKind,
+  RtpCapabilities,
+  RtpParameters,
+} from "mediasoup/lib/types"
+import connectTransport from "./messages/connectTransport"
+import produce from "./messages/produce"
+import consume from "./messages/consume"
 
 const app = express()
 
@@ -26,8 +39,8 @@ httpServer.listen(config.listenPort, () => {
 
 let nextMediasoupWorkerIdx = 0
 
-const workers: WorkerInfo[] = []
-const rooms = {}
+let workers: WorkerInfo[] = []
+const rooms: Rooms = {}
 
 /**
  * Get next mediasoup Worker.
@@ -41,192 +54,175 @@ export function getMediasoupWorker() {
 }
 
 async function main() {
-  const workers = await startMediasoup()
+  workers = await startMediasoup()
 
   wss.on("connection", ws => {
     function sendDataWrapper(type: string, data: any) {
       sendData(ws, type, data)
     }
 
-    const socketInfo = { id: uuid.v4(), socket: ws, sendData: sendDataWrapper }
+    const socketInfo: SocketInfo = {
+      id: uuid.v4(),
+      socket: ws,
+      sendData: sendDataWrapper,
+    }
 
     ws.on("message", handleMessage(socketInfo))
 
-    ws.on("getProducers", () => {
-      console.log(
-        `---get producers--- name:${
-          roomList.get(ws.room_id).getPeers().get(ws.id).name
-        }`
-      )
-      // send all the current producer to newly joined member
-      if (!roomList.has(ws.room_id)) return
-      let producerList = roomList.get(ws.room_id).getProducerListForPeer(ws.id)
-
-      ws.emit("newProducers", producerList)
-    })
-
-    ws.on("getRouterRtpCapabilities", (_, callback) => {
-      console.log(
-        `---get RouterRtpCapabilities--- name: ${
-          roomList.get(ws.room_id).getPeers().get(ws.id).name
-        }`
-      )
-      try {
-        callback(roomList.get(ws.room_id).getRtpCapabilities())
-      } catch (e) {
-        callback({
-          error: e.message,
+    function getRoomFromData({ roomId }): Room | null {
+      if (!rooms.hasOwnProperty(roomId)) {
+        socketInfo.sendData("joinRoom_cb", {
+          error: "room does not exist",
         })
+        return null
       }
+
+      return rooms[roomId]
+    }
+    function getPeer(room: Room): Peer | null {
+      return room.peers[socketInfo.id]
+    }
+
+    registerMessage("createRoom", data => {
+      const roomId: string = data.roomId
+
+      createRoom(roomId, rooms, socketInfo)
     })
-
-    ws.on("createWebRtcTransport", async (_, callback) => {
-      console.log(
-        `---create webrtc transport--- name: ${
-          roomList.get(ws.room_id).getPeers().get(ws.id).name
-        }`
-      )
-      try {
-        const { params } = await roomList
-          .get(ws.room_id)
-          .createWebRtcTransport(ws.id)
-
-        callback(params)
-      } catch (err) {
-        console.error(err)
-        callback({
-          error: err.message,
-        })
-      }
-    })
-
-    ws.on(
-      "connectTransport",
-      async ({ transport_id, dtlsParameters }, callback) => {
-        console.log(
-          `---connect transport--- name: ${
-            roomList.get(ws.room_id).getPeers().get(ws.id).name
-          }`
-        )
-        if (!roomList.has(ws.room_id)) return
-        await roomList
-          .get(ws.room_id)
-          .connectPeerTransport(ws.id, transport_id, dtlsParameters)
-
-        callback("success")
-      }
-    )
-
-    ws.on(
-      "produce",
-      async ({ kind, rtpParameters, producerTransportId }, callback) => {
-        if (!roomList.has(ws.room_id)) {
-          return callback({ error: "not is a room" })
-        }
-
-        let producer_id = await roomList
-          .get(ws.room_id)
-          .produce(ws.id, producerTransportId, rtpParameters, kind)
-        console.log(
-          `---produce--- type: ${kind} name: ${
-            roomList.get(ws.room_id).getPeers().get(ws.id).name
-          } id: ${producer_id}`
-        )
-        callback({
-          producer_id,
-        })
-      }
-    )
-
-    ws.on(
-      "consume",
-      async (
-        { consumerTransportId, producerId, rtpCapabilities },
-        callback
-      ) => {
-        //TODO null handling
-        let params = await roomList
-          .get(ws.room_id)
-          .consume(ws.id, consumerTransportId, producerId, rtpCapabilities)
-
-        console.log(
-          `---consuming--- name: ${
-            roomList.get(ws.room_id) &&
-            roomList.get(ws.room_id).getPeers().get(ws.id).name
-          } prod_id:${producerId} consumer_id:${params.id}`
-        )
-        callback(params)
-      }
-    )
-
-    ws.on("resume", async (data, callback) => {
-      await consumer.resume()
-      callback()
-    })
-
-    ws.on("getMyRoomInfo", (_, cb) => {
-      cb(roomList.get(ws.room_id).toJson())
-    })
-
-    ws.on("disconnect", () => {
-      console.log(
-        `---disconnect--- name: ${
-          roomList.get(ws.room_id) &&
-          roomList.get(ws.room_id).getPeers().get(ws.id).name
-        }`
-      )
-      if (!ws.room_id) return
-      roomList.get(ws.room_id).removePeer(ws.id)
-    })
-
-    ws.on("producerClosed", ({ producer_id }) => {
-      console.log(
-        `---producer close--- name: ${
-          roomList.get(ws.room_id) &&
-          roomList.get(ws.room_id).getPeers().get(ws.id).name
-        }`
-      )
-      roomList.get(ws.room_id).closeProducer(ws.id, producer_id)
-    })
-
-    ws.on("exitRoom", async (_, callback) => {
-      console.log(
-        `---exit room--- name: ${
-          roomList.get(ws.room_id) &&
-          roomList.get(ws.room_id).getPeers().get(ws.id).name
-        }`
-      )
-      if (!roomList.has(ws.room_id)) {
-        callback({
-          error: "not currently in a room",
-        })
+    registerMessage("joinRoom", data => {
+      const room = getRoomFromData(data)
+      if (!room) {
         return
       }
-      // close transports
-      await roomList.get(ws.room_id).removePeer(ws.id)
-      if (roomList.get(ws.room_id).getPeers().size === 0) {
-        roomList.delete(ws.room_id)
+
+      joinRoom(room, socketInfo)
+    })
+    registerMessage("getProducers", data => {
+      const room = getRoomFromData(data)
+      const peer = getPeer(room)
+
+      if (!room || !peer) {
+        return
       }
 
-      ws.room_id = null
-
-      callback("successfully exited room")
+      getProducers(room, peer, socketInfo)
     })
+    registerMessage("getRouterRtpCapabilities", data => {
+      const room = getRoomFromData(data)
+      const peer = getPeer(room)
+
+      if (!room || !peer) {
+        return
+      }
+
+      getRouterRtpCapabilities(room, peer, socketInfo)
+    })
+    registerMessage("createWebRtcTransport", data => {
+      const room = getRoomFromData(data)
+      const peer = getPeer(room)
+
+      if (!room || !peer) {
+        return
+      }
+
+      createWebRtcTransport(room, peer, socketInfo)
+    })
+
+    registerMessage("connectTransport", data => {
+      const room = getRoomFromData(data)
+      const peer = getPeer(room)
+      const transportId: string = data.transportId
+      const dtlsParameters: DtlsParameters = data.dtlsParameters
+
+      if (!room || !peer || !transportId || !dtlsParameters) {
+        return
+      }
+
+      connectTransport(room, peer, transportId, dtlsParameters, socketInfo)
+    })
+
+    registerMessage("produce", data => {
+      const room = getRoomFromData(data)
+      const peer = getPeer(room)
+      const producerTransportId: string = data.producerTransportId
+      const rtpParameters: RtpParameters = data.rtpParameters
+      const kind: MediaKind = data.kind
+
+      if (!room || !peer || !producerTransportId || !rtpParameters || !kind) {
+        return
+      }
+
+      produce(room, peer, producerTransportId, rtpParameters, kind, socketInfo)
+    })
+
+    registerMessage("consume", data => {
+      const room = getRoomFromData(data)
+      const peer = getPeer(room)
+      const consumerTransportId: string = data.consumerTransportId
+      const producerId: string = data.producerId
+      const rtpCapabilities: RtpCapabilities = data.rtpCapabilities
+
+      if (
+        !room ||
+        !peer ||
+        !consumerTransportId ||
+        !rtpCapabilities ||
+        !producerId
+      ) {
+        return
+      }
+
+      consume(
+        room,
+        peer,
+        consumerTransportId,
+        producerId,
+        rtpCapabilities,
+        socketInfo
+      )
+    })
+
+    /**
+    registerMessage("resume", async data => {
+      await consumer.resume()
+    })
+     */
+
+    registerMessage("getMyRoomInfo", () => {
+      const room = rooms[socketInfo.roomId]
+
+      socketInfo.sendData("getMyRoomInfo_cb", room.json())
+    })
+
+    registerMessage("disconnect", () => {
+      const room = rooms[socketInfo.roomId]
+      if (!room) {
+        return
+      }
+
+      const peer = getPeer(room)
+
+      console.log(`---disconnect--- name: ${room && peer?.id}`)
+
+      room.removePeer(peer)
+    })
+
+    registerMessage("producerClosed", data => {
+      const producerId: string = data.producerId
+
+      const room = rooms[socketInfo.roomId]
+      if (!room) {
+        return
+      }
+
+      const peer = getPeer(room)
+
+      console.log(`---producer close--- name: ${peer.id}`)
+
+      room.closeProducer(peer, producerId)
+    })
+
+    ws.on("exitRoom", async (_, callback) => {})
   })
 }
 
 main()
-
-function room() {
-  return Object.values(roomList).map(r => {
-    return {
-      router: r.router.id,
-      peers: Object.values(r.peers).map(p => {
-        return {
-          name: p.name,
-        }
-      }),
-      id: r.id,
-    }
-  })
-}
