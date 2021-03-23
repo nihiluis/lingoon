@@ -1,20 +1,28 @@
+
 {
-	"compilerOptions": {
-		"target": "es5",
-		"lib": ["dom", "dom.iterable", "esnext"],
-		"allowJs": true,
-		"skipLibCheck": true,
-		"esModuleInterop": true,
-		"allowSyntheticDefaultImports": true,
-		"strict": true,
-		"forceConsistentCasingInFileNames": true,
-		"noFallthroughCasesInSwitch": true,
-		"module": "esnext",
-		"moduleResolution": "node",
-		"resolveJsonModule": true,
-		"isolatedModules": true,
-		"noEmit": true,
-		"jsx": "react"
-	},
-	"include": ["src"]
+  "compilerOptions": {
+    "sourceMap": true,
+    "target": "es6",
+    "jsx": "preserve",
+    "moduleResolution": "node",
+    "experimentalDecorators": true,
+    "noEmitOnError": false,
+    "resolveJsonModule": true,
+    "importHelpers": true,
+    "strict": true,
+    "lib": ["ESNext", "DOM"],
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "preserveSymlinks": true,
+    "typeRoots": ["./node_modules/@types"],
+    "downlevelIteration": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "isolatedModules": true
+    // "baseUrl": "src"
+  },
+  "include": ["next-env.d.ts", "src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules"]
 }
