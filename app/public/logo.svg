@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" width="512pt" height="512pt">
+  <defs>
+    <clipPath id="_clipPath_BgfB60smej76imjmmHceKLUvOjYtH4bu">
+      <rect width="512" height="512"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#_clipPath_BgfB60smej76imjmmHceKLUvOjYtH4bu)">
+    <g>
+      <rect x="321.886" y="269.96" width="53.477" height="185.25" transform="matrix(0,-1,1,-0.577,-13.96,920.548)" fill="rgb(184,178,236)"/>
+      <rect x="149.046" y="189.744" width="213.908" height="185.25" transform="matrix(-0.866,0.5,-1,-0.577,760.072,317.395)" fill="rgb(216,212,255)"/>
+      <rect x="136.636" y="269.96" width="53.477" height="185.25" transform="matrix(0,1,-1,-0.577,525.96,408.548)" fill="rgb(227,224,255)"/>
+    </g>
+    <g>
+      <rect x="321.886" y="163.744" width="53.477" height="185.25" transform="matrix(0,-1,1,-0.577,92.256,753.009)" fill="rgb(184,178,236)"/>
+      <rect x="149.046" y="83.529" width="213.908" height="185.25" transform="matrix(-0.866,0.5,-1,-0.577,653.856,149.856)" fill="rgb(216,212,255)"/>
+      <rect x="136.636" y="163.744" width="53.477" height="185.25" transform="matrix(0,1,-1,-0.577,419.744,241.009)" fill="rgb(227,224,255)"/>
+    </g>
+  </g>
+</svg>
