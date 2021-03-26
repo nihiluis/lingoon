@@ -23,7 +23,6 @@ function Sidebar(props: Props): JSX.Element {
     </aside>
   )
 }
-}
 
 export const SidebarTitle: React.FunctionComponent = props => (
   <div>
