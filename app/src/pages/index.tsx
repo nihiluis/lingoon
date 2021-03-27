@@ -1,26 +1,34 @@
 import React, { useEffect, useState, useContext } from "react"
 
-import Layout from "../components/Layout"
+import Layout from "../components/ui/Layout"
+import RoomSidebar from "../components/RoomSidebar"
+import UserSidebar from "../components/UserSidebar"
+import { cx } from "../lib/reexports"
+import Chat from "../components/Chat"
 
-export default function Index() {
-  return (
-    <IndexInner />
-  )
+interface Props {
+  center: boolean
 }
 
-function IndexInner() {
-  // grab all fields for specified focusedType
-  // render these fields in sidebar
-  //
+export default function Index() {
+  return <IndexInner center />
+}
+
+function IndexInner(props: Props) {
+  const { center } = props
+
+  const classes = cx("max-w-screen-sm mt-8", { "mx-auto": center })
 
   return (
-    <Layout
-      showSidebarLeft={true}
-      showSidebarRight={true}
-      sidebarLeftComponent={<React.Fragment></React.Fragment>}
-      sidebarRightComponent={<React.Fragment></React.Fragment>}>
-      {null}
-    </Layout>
+    <div className={classes}>
+      <Layout
+        showSidebarLeft={true}
+        showSidebarRight={true}
+        sidebarLeftComponent={<RoomSidebar />}
+        sidebarRightComponent={<UserSidebar />}>
+        <Chat />
+      </Layout>
+    </div>
   )
 }
 

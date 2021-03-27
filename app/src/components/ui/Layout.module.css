@@ -1,13 +1,14 @@
-@import "../styles/vars.css";
+@import "../../styles/vars.css";
 
 #layout {
   --header-height: 54px;
-  --sidebar-left-width: 260px;
-  --sidebar-right-width: 200px;
+  --sidebar-left-width: 120px;
+  --sidebar-right-width: 180px;
   --bg-color: white;
 
-  grid-template-columns: 200px auto 200px;
-  grid-template-rows: min-content auto min-content;
+  grid-template-columns: var(--sidebar-left-width) auto var(--sidebar-right-width);
+	grid-template-rows: min-content auto min-content;
+	position: relative;
 }
 
 .fullSidebar {
@@ -41,7 +42,7 @@
   grid-template-columns: var(--sidebar-left-width) auto var(
       --sidebar-right-width
     );
-  position: fixed;
+  position: absolute;
   width: 100%;
   height: var(--header-height);
   z-index: 1000;
@@ -49,7 +50,7 @@
 }
 
 .sidebarLeftGrid {
-  position: fixed;
+  position: absolute;
   height: 100%;
   left: 0;
   top: var(--header-height);
@@ -58,7 +59,7 @@
 }
 
 .sidebarRightGrid {
-  position: fixed;
+  position: absolute;
   height: 100%;
   right: 0;
   top: var(--header-height);

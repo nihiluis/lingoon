@@ -7,7 +7,7 @@ import Sidebar from "./Sidebar"
 import layoutStyle from "./Layout.module.css"
 import Logo from "./Logo"
 
-import { PRODUCT_NAME } from "../constants/env"
+import { PRODUCT_NAME } from "../../constants/env"
 
 interface Props {
   showSidebarLeft: boolean

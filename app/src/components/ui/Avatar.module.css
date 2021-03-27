@@ -1,0 +1,20 @@
+
+.avatar {
+	border-radius: 100%;
+	display: table;
+	background-color: white;
+}
+
+.miniAvatar {
+	border-radius: 100%;
+	background-color: white;
+	
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+
+.avatarImage {
+	border-radius: 100%;
+}

@@ -3,8 +3,7 @@ module.exports = {
     purge: ["./src/**/*.tsx", "./public/index.html"],
     theme: {
         fontFamily: {
-            sans: ["Heebo", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
-            mono: ["Menlo", "Monaco", "Courier New", "monospace"],
+            sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
         },
         extend: {
             colors: {

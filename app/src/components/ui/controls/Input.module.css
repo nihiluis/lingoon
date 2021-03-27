@@ -1,0 +1,7 @@
+.input {
+	@apply px-4;
+	@apply py-1;
+	@apply bg-gray-200;
+	@apply rounded-full;
+	outline: none;
+}

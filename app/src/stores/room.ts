@@ -1,4 +1,4 @@
-import { Room } from "../@types/voice"
+import { Room } from "../@types/room"
 import create from "zustand"
 import { combine } from "zustand/middleware"
 import { User } from "../@types/user"
@@ -6,12 +6,19 @@ import { User } from "../@types/user"
 export const useRoomStore = create(
   combine(
     {
-      activeRoom: null as Room | null,
+      activeRoom: {
+        id: "chat",
+        name: "Chat",
+        isVoice: false,
+        rtcParticipants: [],
+      } as Room | null,
       rooms: [
-        { id: "test1", name: "Test", isVoice: true, rtcParticipants: [] },
+        { id: "chat", name: "Chat", isVoice: false, rtcParticipants: [] },
+        { id: "voice", name: "Voice", isVoice: true, rtcParticipants: [] },
       ] as Room[],
     },
     set => ({
+      setActiveRoom: (room: Room) => set(state => ({ activeRoom: room })),
       addRoom: (room: Room) =>
         set(state => ({ rooms: [...state.rooms, room] })),
       removeRoom: (room: Room) =>

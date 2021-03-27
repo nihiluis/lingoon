@@ -1,4 +1,4 @@
-import { Room } from "../@types/voice"
+import { Room } from "../@types/room"
 import create from "zustand"
 import { combine } from "zustand/middleware"
 import { User } from "../@types/user"
@@ -6,11 +6,17 @@ import { User } from "../@types/user"
 export const useUserStore = create(
   combine(
     {
+      activeUser: {
+        id: "roberto",
+        name: "Roberto",
+      },
       users: [
-        { id: "test1", name: "Tomaso" },
-        { id: "test2", name: "Roberto" },
+        { id: "tomaso", name: "Tomaso" },
+        { id: "roberto", name: "Roberto" },
       ] as User[],
     },
-    set => ({})
+    set => ({
+      setActiveUser: (user: User) => set(state => ({ activeUser: user })),
+    })
   )
 )
