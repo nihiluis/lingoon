@@ -4,6 +4,7 @@ import { useUserStore } from "../stores/user"
 import Avatar from "./ui/Avatar"
 import ErrorText from "./ui/ErrorText"
 import Line from "./ui/Line"
+import MarginY from "./ui/MarginY"
 import Text from "./ui/Text"
 import UserAvatar from "./UserAvatar"
 
@@ -13,9 +14,10 @@ export default function UserSidebar(props: Props) {
   const { users } = useUserStore(state => state)
 
   return (
-    <div className="ml-2 px-2">
+    <div className="ml-2 px-2 mt-2">
       <Text text="Users" />
-      <Line />
+      <Line dark />
+      <MarginY amount={2} />
       {users.length === 0 && <ErrorText text="No users found." />}
       {users.map(user => (
         <UserItem key={`user-${user.id}`} user={user} />

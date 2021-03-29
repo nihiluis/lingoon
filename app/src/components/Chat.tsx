@@ -17,13 +17,15 @@ export default function Chat(props: Props) {
   return (
     <div className="relative min-h-full">
       {messages.length === 0 && <Text text="Nothing lives here yet." />}
-      <div className="flex absolute bottom-0 right-0 left-0 mb-2 h-24">
-        <UserAvatar user={user} className="mr-2" />
+      <div className="absolute bottom-0 right-0 left-0 mb-2 h-24">
         <Textarea
           name="chat"
           value=""
           placeholder={`Message #${room?.name ?? "Invalid"}`}
         />
+        <div className="flex mt-1">
+          <UserAvatar user={user} className="mr-2" />
+        </div>
       </div>
     </div>
   )
