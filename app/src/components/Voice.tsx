@@ -1,11 +1,13 @@
 import React from "react"
 import { useRoomStore } from "../stores/room"
 import { useUserStore } from "../stores/user"
+import Icon from './icon'
 import Textarea from "./ui/controls/Textarea"
 import Text from "./ui/Text"
 import UserAvatar from "./UserAvatar"
+import MicSvg from "./icon/Mic.svg"
 
-interface Props {}
+interface Props { }
 
 export default function Chat(props: Props) {
   const messages = []
@@ -20,7 +22,7 @@ export default function Chat(props: Props) {
     <div className="relative min-h-full">
       <div className="absolute bottom-0 right-0 left-0 mb-2 h-24">
         <div className="rounded-lg bg-white">
-          
+          <Icon Src={MicSvg} />
         </div>
       </div>
     </div>
