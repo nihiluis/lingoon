@@ -1,3 +1,3 @@
-import * as Logo from "../../../public/logo.svg"
+import Logo from "../../../public/logo.svg"
 
 export default Logo
