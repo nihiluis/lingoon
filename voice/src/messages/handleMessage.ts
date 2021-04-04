@@ -13,10 +13,11 @@ export default function handleMessage(socketInfo: SocketInfo) {
   return function (message: string) {
     const body = JSON.parse(message)
 
-    const type = body.type
-    const data = body.data
+    const opCode = body["o"]
+    const data = body["d"]
+    const fetchId = body["fetchId"]
 
-    const messageHandler = handlers[type]
+    const messageHandler = handlers[opCode]
     if (!messageHandler) {
       return
     }
