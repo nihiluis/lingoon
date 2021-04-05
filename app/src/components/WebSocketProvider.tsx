@@ -5,6 +5,7 @@ import { User } from "../@types/user"
 import { API_BASE_URL } from "../lib/constants"
 import { useRoomStore } from "../stores/room"
 import { useMuteStore } from "../stores/mute"
+import { useVoiceStore } from "../stores/voice"
 
 interface WebSocketProviderProps {
   shouldConnect: boolean
@@ -38,7 +39,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         getOptions: () => {
           const { activeRoom } = useRoomStore.getState()
           const { muted } = useMuteStore.getState()
-          const { recvTransport, sendTransport } = useVoiceStore.getState()
+          const {
+            recvTransport,
+            sendTransport,
+            roomId,
+          } = useVoiceStore.getState()
 
           const reconnectToVoice = !recvTransport
             ? true
@@ -53,7 +58,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
           return {
             reconnectToVoice,
-            room: activeRoom?.id ?? "",
+            room: roomId,
             muted: muted,
           }
         },
