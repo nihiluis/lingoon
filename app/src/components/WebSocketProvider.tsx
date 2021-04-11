@@ -37,13 +37,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       connectToSocket({
         url: API_BASE_URL.replace("http", "ws"),
         getOptions: () => {
-          const { activeRoom } = useRoomStore.getState()
-          const { muted } = useMuteStore.getState()
-          const {
-            recvTransport,
-            sendTransport,
-            roomId,
-          } = useVoiceStore.getState()
+          const muted = useMuteStore(state => state.muted)
+          const currentRoomId = useRoomStore.getState().currentVoiceRoomId
+          const { recvTransport, sendTransport } = useVoiceStore.getState()
 
           const reconnectToVoice = !recvTransport
             ? true
@@ -58,7 +54,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
           return {
             reconnectToVoice,
-            room: roomId,
+            room: currentRoomId,
             muted: muted,
           }
         },
@@ -70,14 +66,12 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
           //showErrorToast("You can only have 1 tab of DogeHouse open at a time")
         },
       })
-        .then(x => {
-          setConn(x)
-          if (x.initialCurrentRoomId) {
-            useCurrentRoomIdStore
-              .getState()
-              // if an id exists already, that means they are trying to join another room
-              // just let them join the other room rather than overwriting it
-              .setCurrentRoomId(id => id || x.initialCurrentRoomId!)
+        .then(conn => {
+          setConn(conn)
+          if (conn.initialCurrentRoomId) {
+            useRoomStore(state => state.setVoiceRoomIdIfEmpty)(
+              conn.initialCurrentRoomId
+            )
           }
         })
         .catch(err => {
@@ -89,7 +83,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
           isConnecting.current = false
         })
     }
-  }, [conn, shouldConnect, hasTokens, replace])
+  }, [conn, shouldConnect, replace])
 
   return (
     <WebSocketContext.Provider

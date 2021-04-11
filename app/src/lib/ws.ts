@@ -40,7 +40,7 @@ export default function connect({
   onConnectionTaken = () => {},
   onClearTokens = () => {},
   url = apiUrl,
-  options,
+  getOptions,
   fetchTimeout,
 }: {
   onConnectionTaken?: () => void
@@ -51,7 +51,7 @@ export default function connect({
     room: string
   }
   fetchTimeout?: number
-}) {
+}): Promise<Connection> {
   return new Promise((resolve, reject) => {
     const socket = new ReconnectingWebSocket(url, [], {
       connectionTimeout,

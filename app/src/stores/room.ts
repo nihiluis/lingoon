@@ -6,6 +6,7 @@ import { User } from "../@types/user"
 export const useRoomStore = create(
   combine(
     {
+      currentVoiceRoomId: "",
       activeRoom: {
         id: "chat",
         name: "Chat",
@@ -18,6 +19,7 @@ export const useRoomStore = create(
       ] as Room[],
     },
     set => ({
+      setVoiceRoomIdIfEmpty: (id: string) => set(state => ({currentVoiceRoomId: id || state.currentVoiceRoomId})),
       setActiveRoom: (room: Room) => set(state => ({ activeRoom: room })),
       addRoom: (room: Room) =>
         set(state => ({ rooms: [...state.rooms, room] })),
