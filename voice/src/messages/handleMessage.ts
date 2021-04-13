@@ -5,7 +5,7 @@ import getProducers from "./getProducers"
 import joinRoom from "./joinRoom"
 import sendData from "./sendData"
 
-const handlers: Record<string, (data: any) => void> = {}
+const handlers: Record<string, (data: any, fetchId?: string) => void> = {}
 
 export default function handleMessage(socketInfo: SocketInfo) {
   const { id, socket, sendData } = socketInfo
@@ -22,10 +22,10 @@ export default function handleMessage(socketInfo: SocketInfo) {
       return
     }
 
-    messageHandler(data)
+    messageHandler(data, fetchId)
   }
 }
 
-export function registerMessage(type: string, fn: (data: any) => void) {
+export function registerMessage(type: string, fn: (data: any) => void,) {
   handlers[type] = fn
 }

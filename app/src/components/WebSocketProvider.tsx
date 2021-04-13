@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/router"
-import connectToSocket, { Connection } from "../lib/ws"
+import connectToSocket, { WsConnection } from "../lib/ws"
 import { User } from "../@types/user"
 import { API_BASE_URL } from "../lib/constants"
 import { useRoomStore } from "../stores/room"
@@ -11,12 +11,12 @@ interface WebSocketProviderProps {
   shouldConnect: boolean
 }
 
-type V = Connection | null
+type V = WsConnection | null
 
 export const WebSocketContext = React.createContext<{
   conn: V
   setUser: (u: User) => void
-  setConn: (u: Connection | null) => void
+  setConn: (u: WsConnection | null) => void
 }>({
   conn: null,
   setUser: () => {},

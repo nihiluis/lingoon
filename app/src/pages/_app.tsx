@@ -21,7 +21,7 @@ function App({ Component, pageProps }: AppProps) {
 
   return (
     <WebSocketProvider
-      shouldConnect={""}
+      shouldConnect={true}
     >
       <Head>
         <title>{PRODUCT_NAME}</title>

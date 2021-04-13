@@ -8,17 +8,23 @@ import UserAvatar from "./UserAvatar"
 import MicOnSvg from "./icon/Mic.svg"
 import MicOffSvg from "./icon/MicOff.svg"
 import { useMuteStore } from '../stores/mute'
+import { useVoiceStore } from '../stores/voice'
 
 interface Props { }
 
 export default function ChatVoice(props: Props) {
   const messages = []
-  const room = useRoomStore(state => state.activeRoom)
+  const { currentVoiceRoomId, activeRoom } = useRoomStore(state => state)
   const user = useUserStore(state => state.activeUser)
+  const { } = useVoiceStore(state => state)
   const { muted, setMuted } = useMuteStore(state => state)
 
-  if (!room || !room.isVoice) {
+  if (!activeRoom || !activeRoom.isVoice) {
     return null
+  }
+
+  if (activeRoom.id && !== currentVoiceRoomId) {
+    
   }
 
   return (

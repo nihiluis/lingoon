@@ -19,7 +19,7 @@ export type Listener<Data = unknown> = {
   handler: ListenerHandler<Data>
 }
 
-export type Connection = {
+export type WsConnection = {
   close: () => void
   once: <Data = unknown>(opcode: OpCode, handler: ListenerHandler<Data>) => void
   addListener: <Data = unknown>(
@@ -51,7 +51,7 @@ export default function connect({
     room: string
   }
   fetchTimeout?: number
-}): Promise<Connection> {
+}): Promise<WsConnection> {
   return new Promise((resolve, reject) => {
     const socket = new ReconnectingWebSocket(url, [], {
       connectionTimeout,
@@ -92,7 +92,7 @@ export default function connect({
       const message = JSON.parse(e.data)
 
       if (message.op === "auth-success") {
-        const connection: Connection = {
+        const connection: WsConnection = {
           close: () => socket.close(),
           once: (opcode, handler) => {
             const listener = { opcode, handler } as Listener<unknown>
