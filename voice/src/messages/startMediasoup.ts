@@ -1,4 +1,4 @@
-import mediasoup from "mediasoup"
+import { createWorker } from "mediasoup"
 import { WorkerInfo } from "../types"
 import config from "../config"
 
@@ -7,7 +7,7 @@ export default async function startMediasoup() {
   const { numWorkers } = config.mediasoup
 
   for (let i = 0; i < numWorkers; i++) {
-    const worker = await mediasoup.createWorker({
+    const worker = await createWorker({
       logLevel: config.mediasoup.worker.logLevel,
       logTags: config.mediasoup.worker.logTags,
       rtcMinPort: config.mediasoup.worker.rtcMinPort,

@@ -11,6 +11,12 @@ export default function handleMessage(socketInfo: SocketInfo) {
   const { id, socket, sendData } = socketInfo
 
   return function (message: string) {
+    if (message === "ping") {
+      socketInfo.socket.send("pong")
+      return
+    }
+
+    console.log(message)
     const body = JSON.parse(message)
 
     const opCode = body["o"]

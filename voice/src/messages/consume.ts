@@ -21,7 +21,7 @@ export default async function consume(
   console.log(
     `---consuming--- name: ${
       room && peer.id
-    } prod_id:${producerId} consumer_id:${params.id}`
+    } prod_id:${producerId} consumer_id:${params?.id}`
   )
   socketInfo.sendData("consume_cb", params)
 }

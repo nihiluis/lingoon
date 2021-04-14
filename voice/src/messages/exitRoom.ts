@@ -16,7 +16,7 @@ export default async function exitRoom(
     delete rooms[room.id]
   }
 
-  socketInfo.roomId = null
-
+  socketInfo.roomId = undefined
+  
   socketInfo.sendData("exitRoom_cb", "successfully exited room")
 }

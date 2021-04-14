@@ -2,6 +2,7 @@ import {
   DtlsParameters,
   DtlsState,
   MediaKind,
+  Producer,
   Router,
   RtpCapabilities,
   RtpParameters,
@@ -29,7 +30,7 @@ export default class Room {
   }
 
   getProducerList() {
-    let producerList = []
+    let producerList: { producerId: string }[] = []
     Object.values(this.peers).forEach(peer => {
       Object.values(peer._producers).forEach(producer => {
         producerList.push({
@@ -135,11 +136,17 @@ export default class Room {
       return
     }
 
-    const { consumer, params } = await peer.createConsumer(
+    const res = await peer.createConsumer(
       consumerTransportId,
       producerId,
       rtpCapabilities
     )
+
+    if (!res) {
+      return
+    }
+
+    const { consumer, params } = res
 
     consumer.on("producerclose", () => {
       console.log(

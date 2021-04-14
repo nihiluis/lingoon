@@ -11,14 +11,12 @@ interface WebSocketProviderProps {
   shouldConnect: boolean
 }
 
-type V = WsConnection | null
-
 export const WebSocketContext = React.createContext<{
-  conn: V
+  conn?: WsConnection
   setUser: (u: User) => void
-  setConn: (u: WsConnection | null) => void
+  setConn: (u: WsConnection | undefined) => void
 }>({
-  conn: null,
+  conn: undefined,
   setUser: () => {},
   setConn: () => {},
 })
@@ -27,7 +25,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
   shouldConnect,
   children,
 }) => {
-  const [conn, setConn] = useState<V>(null)
+  const [conn, setConn] = useState<WsConnection | undefined>(undefined)
   const { replace } = useRouter()
   const isConnecting = useRef(false)
 

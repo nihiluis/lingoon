@@ -69,7 +69,7 @@ async function main() {
 
     ws.on("message", handleMessage(socketInfo))
 
-    function getRoomFromData({ roomId }): Room | null {
+    function getRoomFromData({ roomId }: { roomId: string }): Room | null {
       if (!rooms.hasOwnProperty(roomId)) {
         socketInfo.sendData("joinRoom_cb", {
           error: "room does not exist",
@@ -98,9 +98,12 @@ async function main() {
     })
     registerMessage("getProducers", data => {
       const room = getRoomFromData(data)
+      if (!room) {
+        return
+      }
       const peer = getPeer(room)
 
-      if (!room || !peer) {
+      if (!peer) {
         return
       }
 
@@ -108,19 +111,24 @@ async function main() {
     })
     registerMessage("getRouterRtpCapabilities", data => {
       const room = getRoomFromData(data)
-      const peer = getPeer(room)
-
-      if (!room || !peer) {
+      if (!room) {
         return
       }
+      const peer = getPeer(room)
 
+      if (!peer) {
+        return
+      }
       getRouterRtpCapabilities(room, peer, socketInfo)
     })
     registerMessage("createWebRtcTransport", data => {
       const room = getRoomFromData(data)
+      if (!room) {
+        return
+      }
       const peer = getPeer(room)
 
-      if (!room || !peer) {
+      if (!peer) {
         return
       }
 
@@ -129,7 +137,15 @@ async function main() {
 
     registerMessage("connectTransport", data => {
       const room = getRoomFromData(data)
+      if (!room) {
+        return
+      }
       const peer = getPeer(room)
+
+      if (!peer) {
+        return
+      }
+
       const transportId: string = data.transportId
       const dtlsParameters: DtlsParameters = data.dtlsParameters
 
@@ -142,7 +158,14 @@ async function main() {
 
     registerMessage("produce", data => {
       const room = getRoomFromData(data)
+if (!room) {
+        return
+      }
       const peer = getPeer(room)
+
+      if (!peer) {
+        return
+      }
       const producerTransportId: string = data.producerTransportId
       const rtpParameters: RtpParameters = data.rtpParameters
       const kind: MediaKind = data.kind
@@ -156,7 +179,14 @@ async function main() {
 
     registerMessage("consume", data => {
       const room = getRoomFromData(data)
+      if (!room) {
+        return
+      }
       const peer = getPeer(room)
+
+      if (!peer) {
+        return
+      }
       const consumerTransportId: string = data.consumerTransportId
       const producerId: string = data.producerId
       const rtpCapabilities: RtpCapabilities = data.rtpCapabilities
@@ -188,18 +218,28 @@ async function main() {
      */
 
     registerMessage("getMyRoomInfo", () => {
-      const room = rooms[socketInfo.roomId]
+      if (!socketInfo.roomId) {
+        socketInfo.sendData("getMyRoomInfo_cb", {"error": "not work"})
+      }
+      const room = rooms[socketInfo.roomId!]
 
       socketInfo.sendData("getMyRoomInfo_cb", room.json())
     })
 
     registerMessage("disconnect", () => {
-      const room = rooms[socketInfo.roomId]
+      if (!socketInfo.roomId) {
+        socketInfo.sendData("getMyRoomInfo_cb", {"error": "not work"})
+      }
+      const room = rooms[socketInfo.roomId!]
+
       if (!room) {
         return
       }
 
       const peer = getPeer(room)
+      if (!peer) {
+        return
+      }
 
       console.log(`---disconnect--- name: ${room && peer?.id}`)
 
@@ -209,12 +249,19 @@ async function main() {
     registerMessage("producerClosed", data => {
       const producerId: string = data.producerId
 
+      if (!socketInfo.roomId) {
+        return
+      }
+
       const room = rooms[socketInfo.roomId]
       if (!room) {
         return
       }
 
       const peer = getPeer(room)
+      if (!peer) {
+        return
+      }
 
       console.log(`---producer close--- name: ${peer.id}`)
 

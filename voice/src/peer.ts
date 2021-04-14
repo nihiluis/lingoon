@@ -66,7 +66,7 @@ export default class Peer {
   ) {
     const consumerTransport = this._transports[consumerTransportId]
 
-    let consumer = null
+    let consumer: Consumer
     try {
       consumer = await consumerTransport.consume({
         producerId: producerId,

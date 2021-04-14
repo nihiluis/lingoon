@@ -4,7 +4,7 @@ import { v4 as generateUuid } from "uuid"
 import { User } from "../@types/user"
 
 const heartbeatInterval = 8000
-const apiUrl = "wss://localhost:3001"
+const apiUrl = "wss://localhost:3016"
 const connectionTimeout = 15000
 
 export type OpCode = string
@@ -85,7 +85,8 @@ export default function connect({
     })
 
     socket.addEventListener("message", e => {
-      if (e.data === `"pong"`) {
+      if (e.data === "pong") {
+        console.log("pong")
         return
       }
 
