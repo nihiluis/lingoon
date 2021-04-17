@@ -16,7 +16,6 @@ export default function handleMessage(socketInfo: SocketInfo) {
       return
     }
 
-    console.log(message)
     const body = JSON.parse(message)
 
     const opCode = body["o"]
@@ -32,6 +31,9 @@ export default function handleMessage(socketInfo: SocketInfo) {
   }
 }
 
-export function registerMessage(type: string, fn: (data: any) => void,) {
+export function registerMessage(
+  type: string,
+  fn: (data: any, fetchId?: string) => void
+) {
   handlers[type] = fn
 }

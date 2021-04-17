@@ -57,8 +57,8 @@ async function main() {
   workers = await startMediasoup()
 
   wss.on("connection", ws => {
-    function sendDataWrapper(type: string, data: any) {
-      sendData(ws, type, data)
+    function sendDataWrapper(opCode: string, data: any, fetchId?: string) {
+      sendData(ws, opCode, data, fetchId)
     }
 
     const socketInfo: SocketInfo = {
@@ -83,18 +83,18 @@ async function main() {
       return room.peers[socketInfo.id]
     }
 
-    registerMessage("createRoom", data => {
+    registerMessage("createRoom", (data, fetchId) => {
       const roomId: string = data.roomId
 
-      createRoom(roomId, rooms, socketInfo)
+      createRoom(roomId, rooms, socketInfo, fetchId)
     })
-    registerMessage("joinRoom", data => {
+    registerMessage("joinRoom", (data, fetchId) => {
       const room = getRoomFromData(data)
       if (!room) {
         return
       }
 
-      joinRoom(room, socketInfo)
+      joinRoom(room, socketInfo, fetchId)
     })
     registerMessage("getProducers", data => {
       const room = getRoomFromData(data)
@@ -158,7 +158,7 @@ async function main() {
 
     registerMessage("produce", data => {
       const room = getRoomFromData(data)
-if (!room) {
+      if (!room) {
         return
       }
       const peer = getPeer(room)
@@ -217,9 +217,14 @@ if (!room) {
     })
      */
 
+    registerMessage("auth", data => {
+      const user: string = data.user
+      socketInfo.sendData("auth_success", { user })
+    })
+
     registerMessage("getMyRoomInfo", () => {
       if (!socketInfo.roomId) {
-        socketInfo.sendData("getMyRoomInfo_cb", {"error": "not work"})
+        socketInfo.sendData("getMyRoomInfo_cb", { error: "not work" })
       }
       const room = rooms[socketInfo.roomId!]
 
@@ -228,7 +233,7 @@ if (!room) {
 
     registerMessage("disconnect", () => {
       if (!socketInfo.roomId) {
-        socketInfo.sendData("getMyRoomInfo_cb", {"error": "not work"})
+        socketInfo.sendData("getMyRoomInfo_cb", { error: "not work" })
       }
       const room = rooms[socketInfo.roomId!]
 

@@ -5,5 +5,5 @@ export interface Room {
   name: string
   voiceId?: string
   isVoice: boolean
-  rtcParticipants: User[]
+  voiceParticipants: User[]
 }

@@ -26,7 +26,7 @@ export type WsConnection = {
     opcode: OpCode,
     handler: ListenerHandler<Data>
   ) => () => void
-  user: User
+  userId: string
   initialCurrentRoomId?: string
   send: (opcode: OpCode, data: unknown, fetchId?: FetchId) => void
   fetch: (
@@ -49,6 +49,7 @@ export default function connect({
   getOptions: () => {
     muted: boolean
     room: string
+    user: User
   }
   fetchTimeout?: number
 }): Promise<WsConnection> {
@@ -92,7 +93,7 @@ export default function connect({
 
       const message = JSON.parse(e.data)
 
-      if (message.op === "auth-success") {
+      if (message.op === "auth_success") {
         const connection: WsConnection = {
           close: () => socket.close(),
           once: (opcode, handler) => {
@@ -105,6 +106,7 @@ export default function connect({
 
             listeners.push(listener)
           },
+          userId: message.d.user,
           addListener: (opcode, handler) => {
             const listener = { opcode, handler } as Listener<unknown>
 
@@ -112,8 +114,6 @@ export default function connect({
 
             return () => listeners.splice(listeners.indexOf(listener), 1)
           },
-          user: message.d.user,
-          initialCurrentRoomId: message.d.currentRoom?.id,
           send: apiSend,
           fetch: (opcode: OpCode, parameters: unknown, doneOpCode?: OpCode) =>
             new Promise((resolveFetch, rejectFetch) => {
@@ -159,10 +159,13 @@ export default function connect({
         }
       }, heartbeatInterval)
 
+      const options = getOptions()
+
       apiSend("auth", {
         reconnectToVoice: false,
         currentRoomId: null,
         muted: false,
+        user: options.user.id,
       })
     })
   })

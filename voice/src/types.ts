@@ -8,7 +8,7 @@ export interface WorkerInfo {
   router: Router
 }
 
-export type SendDataFn = (type: string, data: any) => void
+export type SendDataFn = (opCode: string, data: any, fetchId?: string) => void
 
 export interface SocketInfo {
   id: string

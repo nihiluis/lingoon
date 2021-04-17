@@ -6,6 +6,7 @@ import { API_BASE_URL } from "../lib/constants"
 import { useRoomStore } from "../stores/room"
 import { useMuteStore } from "../stores/mute"
 import { useVoiceStore } from "../stores/voice"
+import { useUserStore } from "../stores/user"
 
 interface WebSocketProviderProps {
   shouldConnect: boolean
@@ -13,11 +14,9 @@ interface WebSocketProviderProps {
 
 export const WebSocketContext = React.createContext<{
   conn?: WsConnection
-  setUser: (u: User) => void
   setConn: (u: WsConnection | undefined) => void
 }>({
   conn: undefined,
-  setUser: () => {},
   setConn: () => {},
 })
 
@@ -38,6 +37,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
           const muted = useMuteStore(state => state.muted)
           const currentRoomId = useRoomStore.getState().currentVoiceRoomId
           const { recvTransport, sendTransport } = useVoiceStore.getState()
+          const user = useUserStore.getState().activeUser
 
           const reconnectToVoice = !recvTransport
             ? true
@@ -54,6 +54,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
             reconnectToVoice,
             room: currentRoomId,
             muted: muted,
+            user,
           }
         },
         onConnectionTaken: () => {
@@ -89,14 +90,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         () => ({
           conn,
           setConn,
-          setUser: (u: User) => {
-            if (conn) {
-              setConn({
-                ...conn,
-                user: u,
-              })
-            }
-          },
         }),
         [conn]
       )}>
