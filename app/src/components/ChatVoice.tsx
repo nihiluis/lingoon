@@ -1,4 +1,4 @@
-import React, { useContext } from "react"
+import React, { useContext, useEffect, useMemo } from "react"
 import { useRoomStore } from "../stores/room"
 import { useUserStore } from "../stores/user"
 import Icon from "./icon"
@@ -24,16 +24,26 @@ export default function ChatVoice(props: Props) {
     state => state
   )
   const user = useUserStore(state => state.activeUser)
-  const {} = useVoiceStore(state => state)
+  const { device, loadDevice } = useVoiceStore(state => state)
   const { muted, setMuted } = useMuteStore(state => state)
 
   if (!activeRoom || !activeRoom.isVoice) {
     return null
   }
 
-  if (activeRoom.id !== currentVoiceRoomId) {
-    joinRoom(user, activeRoom, ws.conn)
-  }
+  useMemo(() => {
+    async function use() {
+      if (!ws.conn) {
+        return
+      }
+
+      if (activeRoom && activeRoom.id !== currentVoiceRoomId) {
+        await joinRoom(user, activeRoom, ws.conn)
+        await loadDevice(activeRoom, ws.conn)
+      }
+    }
+    use()
+  }, [activeRoom, currentVoiceRoomId, ws.conn])
 
   return (
     <div className="relative min-h-full">

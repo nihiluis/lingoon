@@ -7,7 +7,8 @@ import NProgress from "nprogress"
 import { AppProps } from "next/app"
 import { IS_SERVER, PRODUCT_NAME } from "../constants/env"
 import { Router } from "next/router"
-import { WebSocketProvider } from '../components/WebSocketProvider'
+import { WebSocketProvider } from "../components/WebSocketProvider"
+import { useVoiceStore } from "../stores/voice"
 Router.events.on("routeChangeStart", () => {
   NProgress.start()
 })
@@ -19,10 +20,14 @@ function App({ Component, pageProps }: AppProps) {
     return null
   }
 
+  const hasDevice = useVoiceStore(state => !!state.device)
+  if (!hasDevice) {
+    const prepareDevice = useVoiceStore(state => state.prepareDevice)
+    prepareDevice()
+  }
+
   return (
-    <WebSocketProvider
-      shouldConnect={true}
-    >
+    <WebSocketProvider shouldConnect={true}>
       <Head>
         <title>{PRODUCT_NAME}</title>
       </Head>

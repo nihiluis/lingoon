@@ -41,10 +41,10 @@ export const useRoomStore = create(
 
           return { rooms: newRooms }
         }),
-      joinRoom: async (user: User, room: Room, ws: WsConnection) => {
+      joinRoom: async (user: User, room: Room, conn: WsConnection) => {
         const { rooms } = get()
         if (!room.voiceId) {
-          const res = await ws.fetch("createRoom", {
+          const res = await conn.fetch("createRoom", {
             roomId: room.id,
           })
 
@@ -55,7 +55,7 @@ export const useRoomStore = create(
           }
         }
 
-        await ws.fetch("joinRoom", {
+        await conn.fetch("joinRoom", {
           roomId: room.voiceId,
         })
 
@@ -68,7 +68,7 @@ export const useRoomStore = create(
             }
           }
 
-          return { activeRoom: room }
+          return { activeRoom: room, currentVoiceRoomId: room.voiceId ?? "" }
         })
       },
     })

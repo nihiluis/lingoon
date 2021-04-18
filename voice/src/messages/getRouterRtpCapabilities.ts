@@ -5,15 +5,18 @@ import { Rooms, SocketInfo } from "../types"
 export default async function getRouterRtpCapabilities(
   room: Room,
   peer: Peer,
-  socketInfo: SocketInfo
+  socketInfo: SocketInfo,
+  fetchId?: string
 ) {
-  console.log(
-    `---get RouterRtpCapabilities--- id: ${peer.id}`
-  )
+  console.log(`---get RouterRtpCapabilities--- id: ${peer.id}`)
 
   try {
-    socketInfo.sendData("getProducers_cb", room.getRtpCapabilities())
+    socketInfo.sendData(
+      "getRtpCapabilities_cb",
+      room.getRtpCapabilities(),
+      fetchId
+    )
   } catch (ex) {
-    socketInfo.sendData("getProducers_cb", ex.message)
+    socketInfo.sendData("getRtpCapabilities_cb", { error: ex.message }, fetchId)
   }
 }
