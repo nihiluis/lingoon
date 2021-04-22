@@ -105,6 +105,54 @@ export const useVoiceStore = create(
               .catch(errback)
           }
         )
+        producerTransport.on(
+          "produce",
+          async function ({ kind, rtpParameters }, callback, errback) {
+            try {
+              const res = await conn.fetch("produce", {
+                producerTransportId: producerTransport.id,
+                kind,
+                rtpParameters,
+              })
+
+              if (
+                !res ||
+                typeof res !== "object" ||
+                !res!.hasOwnProperty("producerId")
+              ) {
+                errback(new Error("invalid producerId returned"))
+                return
+              }
+
+              const producerId = (res as Partial<{ producerId: string }>)[
+                "producerId"
+              ] as string
+              callback({
+                id: producerId,
+              })
+            } catch (err) {
+              errback(err)
+            }
+          }
+        )
+
+        producerTransport.on("connectionstatechange", function (state) {
+          switch (state) {
+            case "connecting":
+              break
+
+            case "connected":
+              //localVideo.srcObject = stream
+              break
+
+            case "failed":
+              producerTransport.close()
+              break
+
+            default:
+              break
+          }
+        })
       },
       nullify: () =>
         set({
