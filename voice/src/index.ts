@@ -69,7 +69,11 @@ async function main() {
 
     ws.on("message", handleMessage(socketInfo))
 
-    function getRoomFromData({ roomId }: { roomId: string }): Room | null {
+    function getRoomFromData({ roomId }: { roomId?: string }): Room | null {
+      if (!roomId) {
+        return null
+      }
+
       if (!rooms.hasOwnProperty(roomId)) {
         socketInfo.sendData("joinRoom_cb", {
           error: "room does not exist",
@@ -97,7 +101,7 @@ async function main() {
       joinRoom(room, socketInfo, fetchId)
     })
     registerMessage("getProducers", data => {
-      const room = getRoomFromData(data)
+      const room = getRoomFromData(socketInfo)
       if (!room) {
         return
       }
@@ -122,7 +126,7 @@ async function main() {
       getRouterRtpCapabilities(room, peer, socketInfo)
     })
     registerMessage("createWebRtcTransport", data => {
-      const room = getRoomFromData(data)
+      const room = getRoomFromData(socketInfo)
       if (!room) {
         return
       }
@@ -136,7 +140,7 @@ async function main() {
     })
 
     registerMessage("connectTransport", data => {
-      const room = getRoomFromData(data)
+      const room = getRoomFromData(socketInfo)
       if (!room) {
         return
       }
@@ -157,7 +161,7 @@ async function main() {
     })
 
     registerMessage("produce", data => {
-      const room = getRoomFromData(data)
+      const room = getRoomFromData(socketInfo)
       if (!room) {
         return
       }

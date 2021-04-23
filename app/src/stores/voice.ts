@@ -11,6 +11,7 @@ import {
 import create from "zustand"
 import { combine } from "zustand/middleware"
 import { Room } from "../@types/room"
+import createTransport from '../lib/webrtc/createTransport'
 import { WsConnection } from "../lib/ws"
 
 export const getDevice = async () => {
@@ -77,81 +78,12 @@ export const useVoiceStore = create(
           return
         }
 
-        const transportData = await conn.fetch("createWebRtcTransport", {})
+        const producerTransport = await createTransport("producer", device, conn)
+        const consumerTransport = await createTransport("receiver", device, conn)
 
-        const tmpTransportData = transportData as {
-          id: string
-          iceParameters: IceParameters
-          iceCandidates: IceCandidate[]
-          dtlsParameters: DtlsParameters
-        }
-
-        const producerTransport = device.createSendTransport(
-          transportData as TransportOptions
-        )
-        producerTransport.on(
-          "connect",
-          async (
-            { dtlsParameters }: { dtlsParameters: DtlsParameters },
-            callback: () => void,
-            errback: (err: Error) => void
-          ) => {
-            conn
-              .fetch("connectTransport", {
-                dtlsParameters,
-                transportId: tmpTransportData.id,
-              })
-              .then(callback)
-              .catch(errback)
-          }
-        )
-        producerTransport.on(
-          "produce",
-          async function ({ kind, rtpParameters }, callback, errback) {
-            try {
-              const res = await conn.fetch("produce", {
-                producerTransportId: producerTransport.id,
-                kind,
-                rtpParameters,
-              })
-
-              if (
-                !res ||
-                typeof res !== "object" ||
-                !res!.hasOwnProperty("producerId")
-              ) {
-                errback(new Error("invalid producerId returned"))
-                return
-              }
-
-              const producerId = (res as Partial<{ producerId: string }>)[
-                "producerId"
-              ] as string
-              callback({
-                id: producerId,
-              })
-            } catch (err) {
-              errback(err)
-            }
-          }
-        )
-
-        producerTransport.on("connectionstatechange", function (state) {
-          switch (state) {
-            case "connecting":
-              break
-
-            case "connected":
-              //localVideo.srcObject = stream
-              break
-
-            case "failed":
-              producerTransport.close()
-              break
-
-            default:
-              break
-          }
+        set({
+          recvTransport: consumerTransport,
+          sendTransport: producerTransport
         })
       },
       nullify: () =>
