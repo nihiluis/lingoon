@@ -11,7 +11,7 @@ import {
 import create from "zustand"
 import { combine } from "zustand/middleware"
 import { Room } from "../@types/room"
-import createTransport from '../lib/webrtc/createTransport'
+import createTransport from "../lib/webrtc/createTransport"
 import { WsConnection } from "../lib/ws"
 
 export const getDevice = async () => {
@@ -43,6 +43,8 @@ export const useVoiceStore = create(
           return
         }
 
+        console.log("preparing device")
+
         set({ device })
       },
       loadDevice: async (room: Room, conn: WsConnection) => {
@@ -66,6 +68,7 @@ export const useVoiceStore = create(
         await device.load({
           routerRtpCapabilities: rtpCapabilities as RtpCapabilities,
         })
+        console.log(`loaded device ${device.handlerName}`)
 
         set({
           device,
@@ -78,12 +81,20 @@ export const useVoiceStore = create(
           return
         }
 
-        const producerTransport = await createTransport("producer", device, conn)
-        const consumerTransport = await createTransport("receiver", device, conn)
+        const producerTransport = await createTransport(
+          "producer",
+          device,
+          conn
+        )
+        const consumerTransport = await createTransport(
+          "receiver",
+          device,
+          conn
+        )
 
         set({
           recvTransport: consumerTransport,
-          sendTransport: producerTransport
+          sendTransport: producerTransport,
         })
       },
       nullify: () =>

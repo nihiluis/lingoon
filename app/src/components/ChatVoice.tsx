@@ -10,6 +10,9 @@ import MicOffSvg from "./icon/MicOff.svg"
 import { useMuteStore } from "../stores/mute"
 import { useVoiceStore } from "../stores/voice"
 import { WebSocketContext } from "./WebSocketProvider"
+import { MicPicker } from "./MicPicker"
+import { useMicIdStore } from "../stores/micId"
+import { sendVoice } from "../lib/webrtc/sendVoice"
 
 interface Props {}
 
@@ -17,7 +20,6 @@ export default function ChatVoice(props: Props) {
   const messages = []
   const ws = useContext(WebSocketContext)
   if (!ws.conn) {
-    console.error("ws shouldn't be null")
     return null
   }
   const { currentVoiceRoomId, activeRoom, joinRoom } = useRoomStore(
@@ -25,7 +27,12 @@ export default function ChatVoice(props: Props) {
   )
   const user = useUserStore(state => state.activeUser)
   const { device, loadDevice } = useVoiceStore(state => state)
+  const { micId } = useMicIdStore(state => state)
   const { muted, setMuted } = useMuteStore(state => state)
+
+  useEffect(() => {
+    sendVoice()
+  }, [micId])
 
   if (!activeRoom || !activeRoom.isVoice) {
     return null
@@ -54,6 +61,7 @@ export default function ChatVoice(props: Props) {
             reverse
             onClick={() => setMuted(!muted)}
           />
+          <MicPicker />
         </div>
       </div>
     </div>

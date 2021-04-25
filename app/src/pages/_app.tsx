@@ -2,6 +2,7 @@ import "../styles/globals.css"
 import "../styles/vars.css"
 
 import React from "react"
+import dynamic from "next/dynamic"
 import Head from "next/head"
 import NProgress from "nprogress"
 import { AppProps } from "next/app"
@@ -17,12 +18,13 @@ Router.events.on("routeChangeError", () => NProgress.done())
 
 function App({ Component, pageProps }: AppProps) {
   if (IS_SERVER) {
-    return null
+    return <div />
   }
 
   const hasDevice = useVoiceStore(state => !!state.device)
+  const prepareDevice = useVoiceStore(state => state.prepareDevice)
+
   if (!hasDevice) {
-    const prepareDevice = useVoiceStore(state => state.prepareDevice)
     prepareDevice()
   }
 
@@ -36,4 +38,4 @@ function App({ Component, pageProps }: AppProps) {
   )
 }
 
-export default App
+export default dynamic(() => Promise.resolve(App), { ssr: false })

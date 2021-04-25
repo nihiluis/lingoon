@@ -1,5 +1,5 @@
-import { useMicIdStore } from "../stores/useMicIdStore"
-import { useMicPermErrorStore } from "../stores/useMicPermErrorStore"
+import { useMicIdStore } from "../../stores/micId"
+import { useMicPermErrorStore } from "../../stores/micPermError"
 import { useProducerStore } from "../../stores/producer"
 import { useVoiceStore } from "../../stores/voice"
 

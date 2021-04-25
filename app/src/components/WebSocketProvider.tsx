@@ -34,7 +34,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
       connectToSocket({
         url: API_BASE_URL.replace("http", "ws"),
         getOptions: () => {
-          const muted = useMuteStore(state => state.muted)
+          const muted = useMuteStore.getState().muted
           const currentRoomId = useRoomStore.getState().currentVoiceRoomId
           const { recvTransport, sendTransport } = useVoiceStore.getState()
           const user = useUserStore.getState().activeUser
@@ -68,12 +68,13 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         .then(conn => {
           setConn(conn)
           if (conn.initialCurrentRoomId) {
-            useRoomStore(state => state.setVoiceRoomIdIfEmpty)(
-              conn.initialCurrentRoomId
-            )
+            useRoomStore
+              .getState()
+              .setVoiceRoomIdIfEmpty(conn.initialCurrentRoomId)
           }
         })
         .catch(err => {
+          console.error("Unable to connect to ws")
           if (err.code === 4001) {
             replace(`/?next=${window.location.pathname}`)
           }
