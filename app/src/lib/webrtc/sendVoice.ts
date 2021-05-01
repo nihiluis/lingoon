@@ -5,6 +5,7 @@ import { useVoiceStore } from "../../stores/voice"
 
 export const sendVoice = async () => {
   const { micId } = useMicIdStore.getState()
+  const { close } = useProducerStore.getState()
   const { sendTransport, set, mic } = useVoiceStore.getState()
   if (!sendTransport) {
     console.log("no sendTransport in sendVoice")
@@ -30,12 +31,29 @@ export const sendVoice = async () => {
   if (audioTracks.length) {
     console.log("creating producer...")
     const track = audioTracks[0]
-    useProducerStore.getState().add(
-      await sendTransport.produce({
-        track,
-        appData: { mediaTag: "cam-audio" },
-      })
-    )
+
+    const producer = await sendTransport.produce({
+      track,
+      appData: { mediaTag: "cam-audio" },
+    })
+
+    /*
+    producer.on("trackended", () => {
+      close()
+    })
+
+    producer.on("transportclose", () => {
+      console.log("producer transport close")
+      close()
+    })
+
+    producer.on("close", () => {
+      console.log("closing producer")
+      close()
+    })
+    */
+
+    useProducerStore.getState().add(producer)
     set({ mic: track, micStream })
     return
   }

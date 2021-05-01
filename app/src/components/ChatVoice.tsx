@@ -13,6 +13,7 @@ import { WebSocketContext } from "./WebSocketProvider"
 import { MicPicker } from "./MicPicker"
 import { useMicIdStore } from "../stores/micId"
 import { sendVoice } from "../lib/webrtc/sendVoice"
+import { AudioRender } from "./webrtc/AudioRender"
 
 interface Props {}
 
@@ -62,6 +63,7 @@ export default function ChatVoice(props: Props) {
             onClick={() => setMuted(!muted)}
           />
           <MicPicker />
+          <AudioRender />
         </div>
       </div>
     </div>

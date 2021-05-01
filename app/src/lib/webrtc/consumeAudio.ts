@@ -1,7 +1,11 @@
-import { useConsumerStore } from "../stores/useConsumerStore"
-import { useVoiceStore } from "../stores/useVoiceStore"
+import { ConsumerOptions } from "mediasoup-client/lib/types"
+import { useConsumerStore } from "../../stores/consumer"
+import { useVoiceStore } from "../../stores/voice"
 
-export const consumeAudio = async (consumerParameters: any, peerId: string) => {
+export const consumeAudio = async (
+  consumerParameters: any,
+  peerId: string
+) => {
   const { recvTransport } = useVoiceStore.getState()
   if (!recvTransport) {
     console.log("skipping consumeAudio because recvTransport is null")

@@ -11,7 +11,7 @@ export default async function produce(
   kind: MediaKind,
   socketInfo: SocketInfo
 ) {
-  const producerId = await room.produce(
+  const producerId = await room.createProducer(
     peer,
     producerTransportId,
     rtpParameters,

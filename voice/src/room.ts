@@ -97,7 +97,7 @@ export default class Room {
     await peer.connectTransport(transportId, dtlsParameters)
   }
 
-  async produce(
+  async createProducer(
     peer: Peer,
     producerTransportId: string,
     rtpParameters: RtpParameters,
@@ -111,8 +111,12 @@ export default class Room {
 
     this.broadcast(peer, "newProducers", [
       {
-        producerId: producer.id,
-        producerPeerId: peer.id,
+        consumerParameters: {
+          producerId: producer.id,
+          kind,
+          rtpParameters
+        },
+        peerId: peer.id,
       },
     ])
 
