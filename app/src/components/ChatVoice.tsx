@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo } from "react"
+import React, { useContext, useEffect, useMemo, useRef } from "react"
 import { useRoomStore } from "../stores/room"
 import { useUserStore } from "../stores/user"
 import Icon from "./icon"
@@ -14,13 +14,15 @@ import { MicPicker } from "./MicPicker"
 import { useMicIdStore } from "../stores/micId"
 import { sendVoice } from "../lib/webrtc/sendVoice"
 import { AudioRender } from "./webrtc/AudioRender"
+import { consumeAudio } from "../lib/webrtc/consumeAudio"
+import { receiveVoice } from "../lib/webrtc/receiveVoice"
 
 interface Props {}
 
 export default function ChatVoice(props: Props) {
   const messages = []
-  const ws = useContext(WebSocketContext)
-  if (!ws.conn) {
+  const { conn } = useContext(WebSocketContext)
+  if (!conn) {
     return null
   }
   const { currentVoiceRoomId, activeRoom, joinRoom } = useRoomStore(
@@ -30,9 +32,14 @@ export default function ChatVoice(props: Props) {
   const { device, loadDevice } = useVoiceStore(state => state)
   const { micId } = useMicIdStore(state => state)
   const { muted, setMuted } = useMuteStore(state => state)
+  const consumerQueue = useRef<{ roomId: string; d: any }[]>([])
+  const initialLoad = useRef(true)
 
   useEffect(() => {
-    sendVoice()
+    if (micId && !initialLoad.current) {
+      sendVoice()
+    }
+    initialLoad.current = false
   }, [micId])
 
   if (!activeRoom || !activeRoom.isVoice) {
@@ -41,17 +48,42 @@ export default function ChatVoice(props: Props) {
 
   useMemo(() => {
     async function use() {
-      if (!ws.conn) {
+      if (!conn) {
         return
       }
 
       if (activeRoom && activeRoom.id !== currentVoiceRoomId) {
-        await joinRoom(user, activeRoom, ws.conn)
-        await loadDevice(activeRoom, ws.conn)
+        await joinRoom(user, activeRoom, conn)
+        await loadDevice(activeRoom, conn)
       }
     }
     use()
-  }, [activeRoom, currentVoiceRoomId, ws.conn])
+  }, [activeRoom, currentVoiceRoomId, conn])
+
+  async function flushConsumerQueue(_roomId: string) {
+    try {
+      for (const {
+        roomId,
+        d: { peerId, consumerParameters },
+      } of consumerQueue.current) {
+        if (_roomId === roomId) {
+          await consumeAudio(consumerParameters, peerId)
+        }
+      }
+    } catch (err) {
+      console.log(err)
+    } finally {
+      consumerQueue.current = []
+    }
+  }
+  conn.addListener<any>("joined", async data => {
+    const { loadTransports } = useVoiceStore.getState()
+
+    await loadTransports(conn)
+    await sendVoice()
+
+    receiveVoice(conn, () => flushConsumerQueue(data.roomId))
+  })
 
   return (
     <div className="relative min-h-full">
