@@ -38,7 +38,7 @@ export const AudioRender: React.FC<AudioRenderProps> = () => {
 
   return (
     <>
-      <div className={`absolute top-0 w-full h-full flex z-50 bg-primary-900`}>
+      <div className={`absolute top-0 w-full h-full flex bg-primary-900`}>
         <div className={`flex p-8 rounded m-auto bg-primary-700 flex-col`}>
           {Object.keys(consumerMap).map(k => {
             const { consumer, volume: userVolume } = consumerMap[k]

@@ -4,7 +4,7 @@ import { useMicIdStore } from "../stores/micId"
 interface MicPickerProps {}
 
 export const MicPicker: React.FC<MicPickerProps> = () => {
-  const { micId, setMicId } = useMicIdStore()
+  const { micId, setMicId } = useMicIdStore(state => state)
   const [options, setOptions] = useState<
     Array<{ id: string; label: string } | null>
   >([])
@@ -13,8 +13,10 @@ export const MicPicker: React.FC<MicPickerProps> = () => {
       .enumerateDevices()
       .then(x =>
         setOptions(
-          x.map(y =>
-            y.kind !== "audioinput" ? null : { id: y.deviceId, label: y.label }
+          x.map((y, idx) =>
+            y.kind !== "audioinput"
+              ? null
+              : { id: y.deviceId, label: y.label || `Audio ${idx}` }
           )
         )
       )

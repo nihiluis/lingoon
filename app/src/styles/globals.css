@@ -2,16 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter&display=swap");
 
 :root {
-	--primary-color: #4d496b;
-	--link-color: #4d496b;
-	--focused-color: #8575ff;
-	--unfocused-color: #9996a9;
-	--bg-content: #fff;
-	--bg-content-contrast: #fbfbfb;
-	--border-color: #fefefe;
-	--section-left-column-width: 8rem;
-	--section-left-column-gap: 1.5rem;
+  --primary-color: #4d496b;
+  --link-color: #4d496b;
+  --focused-color: #8575ff;
+  --unfocused-color: #9996a9;
+  --bg-content: #fff;
+  --bg-content-contrast: #fbfbfb;
+  --border-color: #fefefe;
+  --section-left-column-width: 8rem;
+  --section-left-column-gap: 1.5rem;
+}
+
+select {
+}
+
+select {
+  @apply rounded;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding-right: 24px;
+  background: url('data:image/svg+xml;utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>')
+    100% 50% no-repeat transparent;
 }

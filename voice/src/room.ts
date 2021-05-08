@@ -109,13 +109,9 @@ export default class Room {
       kind
     )
 
-    this.broadcast(peer, "newProducers", [
+    this.broadcast(peer, "joined", [
       {
-        consumerParameters: {
-          producerId: producer.id,
-          kind,
-          rtpParameters
-        },
+        producerId: producer.id,
         peerId: peer.id,
       },
     ])

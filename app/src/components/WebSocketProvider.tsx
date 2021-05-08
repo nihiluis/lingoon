@@ -66,6 +66,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         },
       })
         .then(conn => {
+          console.log("set conn")
           setConn(conn)
           if (conn.initialCurrentRoomId) {
             useRoomStore
@@ -75,6 +76,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
         })
         .catch(err => {
           console.error("Unable to connect to ws")
+          console.error(err.message)
           if (err.code === 4001) {
             replace(`/?next=${window.location.pathname}`)
           }

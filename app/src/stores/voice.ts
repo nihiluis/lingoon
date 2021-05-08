@@ -73,29 +73,11 @@ export const useVoiceStore = create(
         set({
           device,
         })
+
+        return device
       },
       loadTransports: async (conn: WsConnection) => {
         const { device } = get()
-
-        if (!device) {
-          return
-        }
-
-        const producerTransport = await createTransport(
-          "producer",
-          device,
-          conn
-        )
-        const consumerTransport = await createTransport(
-          "receiver",
-          device,
-          conn
-        )
-
-        set({
-          recvTransport: consumerTransport,
-          sendTransport: producerTransport,
-        })
       },
       nullify: () =>
         set({

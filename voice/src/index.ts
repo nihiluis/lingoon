@@ -223,6 +223,7 @@ async function main() {
 
     registerMessage("auth", data => {
       const user: string = data.user
+      console.log(`receiving auth request from ${user}`)
       socketInfo.sendData("auth_success", { user })
     })
 

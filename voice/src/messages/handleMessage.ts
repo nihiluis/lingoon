@@ -24,9 +24,11 @@ export default function handleMessage(socketInfo: SocketInfo) {
 
     const messageHandler = handlers[opCode]
     if (!messageHandler) {
+      console.log(`unable to find opCode ${opCode} to handle`)
       return
     }
 
+    console.log(`handling opCode ${opCode}`)
     messageHandler(data, fetchId)
   }
 }

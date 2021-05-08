@@ -60,7 +60,7 @@ export default function connect({
     })
 
     const apiSend = (opcode: OpCode, data: unknown, fetchId?: FetchId) => {
-      const raw = `{"op":"${opcode}","d":${JSON.stringify(data)}${
+      const raw = `{"o":"${opcode}","d":${JSON.stringify(data)}${
         fetchId ? `,"fetchId":"${fetchId}"` : ""
       }}`
 
@@ -87,7 +87,7 @@ export default function connect({
 
     socket.addEventListener("message", e => {
       if (e.data === "pong") {
-        console.log("pong")
+        //console.log("pong")
         return
       }
 
@@ -161,6 +161,7 @@ export default function connect({
 
       const options = getOptions()
 
+      console.log("sending auth request...")
       apiSend("auth", {
         reconnectToVoice: false,
         currentRoomId: null,
