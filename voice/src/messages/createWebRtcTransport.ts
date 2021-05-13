@@ -11,9 +11,9 @@ export default async function createWebRtcTransport(
   try {
     const { params } = await room.createWebRtcTransport(peer)
 
-    socketInfo.sendData("createWebRtcTransport_cb", params)
+    return params
   } catch (ex) {
     console.error(ex)
-    socketInfo.sendData("createWebRtcTransport_cb", ex.message)
+    return { error: ex.message }
   }
 }

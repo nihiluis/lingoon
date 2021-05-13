@@ -16,6 +16,4 @@ export default async function connectTransport(
     }`
   )
   await room.connectPeerTransport(peer, transportId, dtlsParameters)
-
-  socketInfo.sendData("connectTransport_cb", "success")
 }

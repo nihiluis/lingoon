@@ -19,7 +19,7 @@ export default async function produce(
   )
   console.log(`---produce--- type: ${kind} name: ${peer.id} id: ${producerId}`)
 
-  socketInfo.sendData("produce_cb", {
-    producerId: producerId,
-  })
+  return {
+    producerId,
+  }
 }

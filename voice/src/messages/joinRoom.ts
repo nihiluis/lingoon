@@ -13,5 +13,5 @@ export default function joinRoom(
 
   socketInfo.roomId = room.id
 
-  socketInfo.sendData("joinRoom_success", {}, fetchId)
+  return {}
 }

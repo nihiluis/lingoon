@@ -11,12 +11,8 @@ export default async function getRouterRtpCapabilities(
   console.log(`---get RouterRtpCapabilities--- id: ${peer.id}`)
 
   try {
-    socketInfo.sendData(
-      "getRtpCapabilities_cb",
-      room.getRtpCapabilities(),
-      fetchId
-    )
+    return room.getRtpCapabilities()
   } catch (ex) {
-    socketInfo.sendData("getRtpCapabilities_cb", { error: ex.message }, fetchId)
+    return { error: ex.message }
   }
 }

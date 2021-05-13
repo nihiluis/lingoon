@@ -9,12 +9,13 @@ export default async function createRoom(
   fetchId?: string
 ) {
   if (rooms.hasOwnProperty(roomId)) {
-    socketInfo.sendData("createRoom_cb", { error: "already exists" }, fetchId)
+    return { error: "already exists" }
   } else {
     const workerInfo = getMediasoupWorker()
     rooms[roomId] = new Room(roomId, workerInfo)
-    socketInfo.sendData("createRoom_cb", { room: roomId }, fetchId)
 
     console.log("---created room--- ", roomId)
+
+    return { roomId }
   }
 }

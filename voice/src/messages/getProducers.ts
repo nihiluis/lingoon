@@ -12,5 +12,5 @@ export default async function getProducers(
 
   const producerList = room.getProducerList()
 
-  socketInfo.sendData("newProducers", producerList)
+  return producerList
 }

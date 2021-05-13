@@ -87,20 +87,22 @@ async function main() {
       return room.peers[socketInfo.id]
     }
 
-    registerMessage("createRoom", (data, fetchId) => {
+    registerMessage("createRoom", async (data, fetchId) => {
       const roomId: string = data.roomId
 
-      createRoom(roomId, rooms, socketInfo, fetchId)
+      const responseData = await createRoom(roomId, rooms, socketInfo, fetchId)
+      socketInfo.sendData("", responseData, fetchId)
     })
-    registerMessage("joinRoom", (data, fetchId) => {
+    registerMessage("joinRoom", async (data, fetchId) => {
       const room = getRoomFromData(data)
       if (!room) {
         return
       }
 
-      joinRoom(room, socketInfo, fetchId)
+      const responseData = await joinRoom(room, socketInfo, fetchId)
+      socketInfo.sendData("", responseData, fetchId)
     })
-    registerMessage("getProducers", data => {
+    registerMessage("getProducers", async (data, fetchId) => {
       const room = getRoomFromData(socketInfo)
       if (!room) {
         return
@@ -111,9 +113,10 @@ async function main() {
         return
       }
 
-      getProducers(room, peer, socketInfo)
+      const responseData = await getProducers(room, peer, socketInfo)
+      socketInfo.sendData("", responseData, fetchId)
     })
-    registerMessage("getRouterRtpCapabilities", data => {
+    registerMessage("getRouterRtpCapabilities", async (data, fetchId) => {
       const room = getRoomFromData(data)
       if (!room) {
         return
@@ -123,9 +126,14 @@ async function main() {
       if (!peer) {
         return
       }
-      getRouterRtpCapabilities(room, peer, socketInfo)
+      const responseData = await getRouterRtpCapabilities(
+        room,
+        peer,
+        socketInfo
+      )
+      socketInfo.sendData("", responseData, fetchId)
     })
-    registerMessage("createWebRtcTransport", data => {
+    registerMessage("createWebRtcTransport", async (data, fetchId) => {
       const room = getRoomFromData(socketInfo)
       if (!room) {
         return
@@ -136,10 +144,11 @@ async function main() {
         return
       }
 
-      createWebRtcTransport(room, peer, socketInfo)
+      const responseData = await createWebRtcTransport(room, peer, socketInfo)
+      socketInfo.sendData("", responseData, fetchId)
     })
 
-    registerMessage("connectTransport", data => {
+    registerMessage("connectTransport", async (data, fetchId) => {
       const room = getRoomFromData(socketInfo)
       if (!room) {
         return
@@ -157,10 +166,18 @@ async function main() {
         return
       }
 
-      connectTransport(room, peer, transportId, dtlsParameters, socketInfo)
+      await connectTransport(
+        room,
+        peer,
+        transportId,
+        dtlsParameters,
+        socketInfo
+      )
+
+      socketInfo.sendData("", "success", fetchId)
     })
 
-    registerMessage("produce", data => {
+    registerMessage("produce", async (data, fetchId) => {
       const room = getRoomFromData(socketInfo)
       if (!room) {
         return
@@ -178,10 +195,18 @@ async function main() {
         return
       }
 
-      produce(room, peer, producerTransportId, rtpParameters, kind, socketInfo)
+      const responseData = await produce(
+        room,
+        peer,
+        producerTransportId,
+        rtpParameters,
+        kind,
+        socketInfo
+      )
+      socketInfo.sendData("", responseData, fetchId)
     })
 
-    registerMessage("consume", data => {
+    registerMessage("consume", async (data, fetchId) => {
       const room = getRoomFromData(data)
       if (!room) {
         return
@@ -205,7 +230,7 @@ async function main() {
         return
       }
 
-      consume(
+      const responseData = await consume(
         room,
         peer,
         consumerTransportId,
@@ -213,6 +238,8 @@ async function main() {
         rtpCapabilities,
         socketInfo
       )
+
+      socketInfo.sendData("", responseData, fetchId)
     })
 
     /**
@@ -221,7 +248,7 @@ async function main() {
     })
      */
 
-    registerMessage("auth", data => {
+    registerMessage("auth", (data, fetchId) => {
       const user: string = data.user
       console.log(`receiving auth request from ${user}`)
       socketInfo.sendData("auth_success", { user })
@@ -256,7 +283,7 @@ async function main() {
       room.removePeer(peer)
     })
 
-    registerMessage("producerClosed", data => {
+    registerMessage("producerClosed", (data, fetchId) => {
       const producerId: string = data.producerId
 
       if (!socketInfo.roomId) {

@@ -6,9 +6,9 @@ export default function sendData(
   data: any,
   fetchId?: string
 ) {
-  const raw = `{"op":"${opCode}","d":${JSON.stringify(data)}${
-    fetchId ? `,"fetchId":"${fetchId}"` : ""
-  }}`
+  const raw = `{"op":"${fetchId ? "fetch_done" : opCode}","d":${JSON.stringify(
+    data
+  )}${fetchId ? `,"fetchId":"${fetchId}"` : ""}}`
 
   socket.send(raw)
 }
