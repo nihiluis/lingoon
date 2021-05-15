@@ -21,6 +21,7 @@ export const useMicIdStore = create(
         try {
           localStorage.setItem(MIC_KEY, id)
         } catch {}
+        console.log(`new micId is ${id}`)
         set({ micId: id })
       },
     })

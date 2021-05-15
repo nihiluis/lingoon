@@ -42,6 +42,7 @@ export default async function createTransport(
         .fetch("connectTransport", {
           dtlsParameters,
           transportId: tmpTransportData.id,
+          side: side === "producer" ? "send" : "recv",
         })
         .then(callback)
         .catch(errback)

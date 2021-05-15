@@ -17,6 +17,7 @@ import { AudioRender } from "./webrtc/AudioRender"
 import { consumeAudio } from "../lib/webrtc/consumeAudio"
 import { receiveVoice } from "../lib/webrtc/receiveVoice"
 import createTransport from "../lib/webrtc/createTransport"
+import protect from "await-protect"
 
 interface Props {}
 
@@ -39,7 +40,8 @@ export default function ChatVoice(props: Props) {
   }
 
   useEffect(() => {
-    if (micId && !initialLoad.current) {
+    if (micId) {
+      //if (micId && !initialLoad.current) {
       sendVoice()
     }
     initialLoad.current = false
@@ -61,20 +63,26 @@ export default function ChatVoice(props: Props) {
           return
         }
 
-        await joinRoom(user, activeRoom, conn)
+        const [_, joinRoomErr] = await protect(joinRoom(user, activeRoom, conn))
+        if (joinRoomErr) {
+          console.log(joinRoomErr.message)
+          return
+        }
+        console.log("joined room")
         const loadedDevice = await loadDevice(activeRoom, conn)
 
         if (!loadedDevice) {
+          console.log("unable to load device")
           return
         }
 
-        const producerTransport = await createTransport(
-          "producer",
+        const consumerTransport = await createTransport(
+          "receiver",
           loadedDevice,
           conn
         )
-        const consumerTransport = await createTransport(
-          "receiver",
+        const producerTransport = await createTransport(
+          "producer",
           loadedDevice,
           conn
         )
@@ -86,7 +94,7 @@ export default function ChatVoice(props: Props) {
       }
     }
     use()
-  }, [activeRoom, currentVoiceRoomId, conn])
+  }, [activeRoom, device, currentVoiceRoomId, conn])
 
   async function flushConsumerQueue(_roomId: string) {
     try {
@@ -104,15 +112,16 @@ export default function ChatVoice(props: Props) {
       consumerQueue.current = []
     }
   }
-  conn.addListener<any>("joined", async data => {
+  conn.addListener<any>("you-joined", async data => {
     // produce ws handler is called in createTransport, join should occur and could be tested?
-    const { loadTransports } = useVoiceStore.getState()
-
-    await loadTransports(conn)
-    await sendVoice()
+    console.log("handling you-joined")
 
     // consumerQueue should be empty, will never be filled I think
     receiveVoice(conn, () => flushConsumerQueue(data.roomId))
+  })
+
+  conn.addListener<any>("speaker-joined", async data => {
+    console.log("handling speaker joined")
   })
 
   return (

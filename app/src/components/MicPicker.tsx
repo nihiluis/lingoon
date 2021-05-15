@@ -13,14 +13,24 @@ export const MicPicker: React.FC<MicPickerProps> = () => {
       .enumerateDevices()
       .then(x =>
         setOptions(
-          x.map((y, idx) =>
-            y.kind !== "audioinput"
-              ? null
-              : { id: y.deviceId, label: y.label || `Audio ${idx}` }
-          )
+          x
+            .map((y, idx) =>
+              y.kind !== "audioinput"
+                ? null
+                : { id: y.deviceId, label: y.label || `Audio ${idx}` }
+            )
+            .filter(x => !!x)
         )
       )
   }, [])
+
+  useEffect(() => {
+    const defaultOption = options[0]?.id
+    if (defaultOption) {
+      setMicId(defaultOption)
+    }
+  }, [options])
+
   return (
     <>
       {options.length === 0 ? (

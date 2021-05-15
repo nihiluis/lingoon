@@ -6,6 +6,7 @@ import { Rooms, SocketInfo } from "../types"
 export default async function connectTransport(
   room: Room,
   peer: Peer,
+  side: "recv" | "send",
   transportId: string,
   dtlsParameters: DtlsParameters,
   socketInfo: SocketInfo
@@ -15,5 +16,5 @@ export default async function connectTransport(
       peer.id
     }`
   )
-  await room.connectPeerTransport(peer, transportId, dtlsParameters)
+  await room.connectPeerTransport(peer, side, transportId, dtlsParameters)
 }

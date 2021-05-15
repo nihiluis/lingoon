@@ -42,22 +42,33 @@ export const useRoomStore = create(
           return { rooms: newRooms }
         }),
       joinRoom: async (user: User, room: Room, conn: WsConnection) => {
-        const { rooms } = get()
         if (!room.voiceId) {
+          console.log("creating room " + room.id)
           const res = await conn.fetch("createRoom", {
             roomId: room.id,
           })
+          console.log("created room " + room.id)
 
           if (typeof res === "object" && res && res.hasOwnProperty("roomId")) {
             room.voiceId = (res as { roomId: string }).roomId
           } else {
-            return
+            if ((res as any).error !== "already exists") {
+              throw new Error(
+                "unable to join room as createRoom res is invalid " +
+                  JSON.stringify(res)
+              )
+            } else {
+              // this is only in debug when rooms are not loaded from server
+              room.voiceId = room.id
+            }
           }
         }
 
+        console.log("joining room " + room.voiceId)
         await conn.fetch("joinRoom", {
           roomId: room.voiceId,
         })
+        console.log("joined room " + room.voiceId)
 
         set(state => {
           const newRooms = [...state.rooms]

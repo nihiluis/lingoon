@@ -17,6 +17,20 @@ export default async function produce(
     rtpParameters,
     kind
   )
+
+  room.broadcast(peer, "speaker-joined", [
+    {
+      producerId: producerId,
+      peerId: peer.id,
+    },
+  ])
+
+  socketInfo.sendData("you-joined", {
+    roomId: room.id,
+    peerId: peer.id,
+    producerId,
+  })
+
   console.log(`---produce--- type: ${kind} name: ${peer.id} id: ${producerId}`)
 
   return {

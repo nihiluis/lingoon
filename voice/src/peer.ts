@@ -15,8 +15,11 @@ export default class Peer {
   _socket: WebSocket
 
   _transports: Record<string, Transport> = {}
-  _consumers: Record<string, Consumer> = {}
+  recvTransportId: string = ""
+  sendTransportId: string = ""
+  consumers: Record<string, Consumer> = {}
   _producers: Record<string, Producer> = {}
+  producer: Producer | undefined
 
   constructor(peerId: string, socket: WebSocket) {
     this.id = peerId
@@ -27,8 +30,19 @@ export default class Peer {
     this._transports[transport.id] = transport
   }
 
-  async connectTransport(transportId: string, dtlsParameters: DtlsParameters) {
+  async connectTransport(
+    transportId: string,
+    side: "recv" | "send",
+    dtlsParameters: DtlsParameters
+  ) {
     if (!this._transports.hasOwnProperty(transportId)) return
+
+    if (side === "recv") {
+      this.recvTransportId = transportId
+    } else {
+      this.sendTransportId = transportId
+    }
+
     await this._transports[transportId].connect({
       dtlsParameters: dtlsParameters,
     })
@@ -46,6 +60,7 @@ export default class Peer {
     })
 
     this._producers[producer.id] = producer
+    this.producer = producer
 
     producer.on("transportclose", () => {
       console.log(
@@ -54,6 +69,7 @@ export default class Peer {
       producer.close()
 
       delete this._producers[producer.id]
+      this.producer = undefined
     })
 
     return producer
@@ -85,14 +101,14 @@ export default class Peer {
       })
     }
 
-    this._consumers[consumer.id] = consumer
+    this.consumers[consumer.id] = consumer
 
     consumer.on("transportclose", () => {
       console.log(
         `---consumer transport close--- id: ${this.id} consumer_id: ${consumer.id}`
       )
 
-      delete this._consumers[consumer.id]
+      delete this.consumers[consumer.id]
     })
 
     return {
@@ -120,6 +136,7 @@ export default class Peer {
     }
 
     delete this._producers[producerId]
+    this.producer = undefined
   }
 
   getProducer(producerId: string) {
@@ -131,6 +148,6 @@ export default class Peer {
   }
 
   removeConsumer(consumerId: string) {
-    delete this._consumers[consumerId]
+    delete this.consumers[consumerId]
   }
 }

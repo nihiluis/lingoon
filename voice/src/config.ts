@@ -51,7 +51,7 @@ export default {
     webRtcTransport: {
       listenIps: [
         {
-          ip: "0.0.0.0",
+          ip: "0.0.0.0", // firefox doesnt suppor this, only chrome. need to replace ip
           announcedIp: "127.0.0.1", // replace by public IP address
         },
       ],

@@ -160,6 +160,7 @@ async function main() {
       }
 
       const transportId: string = data.transportId
+      const side: "recv" | "send" = data.side
       const dtlsParameters: DtlsParameters = data.dtlsParameters
 
       if (!room || !peer || !transportId || !dtlsParameters) {
@@ -169,6 +170,7 @@ async function main() {
       await connectTransport(
         room,
         peer,
+        side,
         transportId,
         dtlsParameters,
         socketInfo
@@ -204,6 +206,29 @@ async function main() {
         socketInfo
       )
       socketInfo.sendData("", responseData, fetchId)
+    })
+
+    registerMessage("recv-tracks", async (data, fetchId) => {
+      const room = getRoomFromData(socketInfo)
+      if (!room) {
+        return
+      }
+      const myPeer = getPeer(room)
+
+      if (!myPeer) {
+        return
+      }
+
+      const consumerParametersArr = []
+
+      for (const theirPeerId of Object.keys(room.getPeers())) {
+        const peerState = room.peers[theirPeerId]
+        peerState
+        if (theirPeerId === myPeer.id || !peerState || !peerState.producer) {
+          continue
+        }
+      }
+      myPeer._transports
     })
 
     registerMessage("consume", async (data, fetchId) => {

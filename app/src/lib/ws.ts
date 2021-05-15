@@ -41,7 +41,7 @@ export default function connect({
   onClearTokens = () => {},
   url = apiUrl,
   getOptions,
-  fetchTimeout,
+  fetchTimeout = 2500,
 }: {
   onConnectionTaken?: () => void
   onClearTokens?: () => void

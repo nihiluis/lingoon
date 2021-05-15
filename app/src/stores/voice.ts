@@ -43,13 +43,14 @@ export const useVoiceStore = create(
           return
         }
 
-        console.log("preparing device")
+        console.log("preparing device, set " + device.handlerName)
 
         set({ device })
       },
       loadDevice: async (room: Room, conn: WsConnection) => {
         const device = get().device
         if (!device) {
+          console.error("unable to loadDevice as device is null")
           return
         }
 
@@ -60,8 +61,11 @@ export const useVoiceStore = create(
         if (
           typeof rtpCapabilities === "object" &&
           rtpCapabilities &&
-          !rtpCapabilities.hasOwnProperty("error")
+          !rtpCapabilities.hasOwnProperty("codecs")
         ) {
+          console.error(
+            "unable to read rtpCapabilities " + JSON.stringify(rtpCapabilities)
+          )
           return
         }
 
@@ -75,9 +79,6 @@ export const useVoiceStore = create(
         })
 
         return device
-      },
-      loadTransports: async (conn: WsConnection) => {
-        const { device } = get()
       },
       nullify: () =>
         set({
