@@ -26,8 +26,16 @@ export default class Peer {
     this._socket = socket
   }
 
-  addTransport(transport: Transport) {
+  addTransport(transport: Transport, side: "recv" | "send") {
     this._transports[transport.id] = transport
+
+    if (side === "recv") {
+      console.log("setting recv transport for peer " + this.id)
+      this.recvTransportId = transport.id
+    } else {
+      console.log("setting send transport for peer " + this.id)
+      this.sendTransportId = transport.id
+    }
   }
 
   async connectTransport(
@@ -36,12 +44,6 @@ export default class Peer {
     dtlsParameters: DtlsParameters
   ) {
     if (!this._transports.hasOwnProperty(transportId)) return
-
-    if (side === "recv") {
-      this.recvTransportId = transportId
-    } else {
-      this.sendTransportId = transportId
-    }
 
     await this._transports[transportId].connect({
       dtlsParameters: dtlsParameters,
@@ -110,6 +112,17 @@ export default class Peer {
 
       delete this.consumers[consumer.id]
     })
+
+    console.log(
+      `peer.createConsumer params: ${JSON.stringify({
+        producerId: producerId,
+        id: consumer.id,
+        kind: consumer.kind,
+        rtpParameters: consumer.rtpParameters,
+        type: consumer.type,
+        producerPaused: consumer.producerPaused,
+      })}`
+    )
 
     return {
       consumer,

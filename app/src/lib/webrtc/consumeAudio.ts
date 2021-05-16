@@ -9,6 +9,12 @@ export const consumeAudio = async (consumerParameters: any, peerId: string) => {
     return false
   }
 
+  console.log(
+    `sending consume for peer ${peerId} with params ${JSON.stringify(
+      consumerParameters
+    )}`
+  )
+
   const consumer = await recvTransport.consume({
     ...consumerParameters,
     appData: {
@@ -17,6 +23,8 @@ export const consumeAudio = async (consumerParameters: any, peerId: string) => {
       mediaTag: "cam-audio",
     },
   })
+
+  console.log(`consuming peerId ${peerId}`)
 
   useConsumerStore.getState().add(consumer, peerId)
 

@@ -45,7 +45,7 @@ export default class Room {
     return this.router.rtpCapabilities
   }
 
-  async createWebRtcTransport(peer: Peer) {
+  async createWebRtcTransport(peer: Peer, side: "recv" | "send") {
     const {
       maxIncomingBitrate,
       initialAvailableOutgoingBitrate,
@@ -77,7 +77,7 @@ export default class Room {
     })
 
     console.log("---adding transport---", transport.id)
-    peer.addTransport(transport)
+    peer.addTransport(transport, side)
 
     return {
       params: {
@@ -137,6 +137,7 @@ export default class Room {
     )
 
     if (!res) {
+      console.log("unable to create consumer")
       return
     }
 

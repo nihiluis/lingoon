@@ -8,14 +8,14 @@ import {
 } from "mediasoup-client/lib/types"
 import { WsConnection } from "../ws"
 
-type TransportSide = "producer" | "receiver"
+type TransportSide = "recv" | "send"
 
 export default async function createTransport(
   side: TransportSide,
   device: Device,
   conn: WsConnection
 ): Promise<Transport> {
-  const transportData = await conn.fetch("createWebRtcTransport", {})
+  const transportData = await conn.fetch("createWebRtcTransport", { side })
 
   const tmpTransportData = transportData as {
     id: string
@@ -25,11 +25,15 @@ export default async function createTransport(
   }
 
   let transport: Transport
-  if (side === "producer") {
+  if (side === "send") {
     transport = device.createSendTransport(tmpTransportData)
   } else {
     transport = device.createRecvTransport(tmpTransportData)
   }
+
+  console.log(
+    `created transport ${transport.id} for side ${side}, waiting for connect...`
+  )
 
   transport.on(
     "connect",
@@ -38,11 +42,13 @@ export default async function createTransport(
       callback: () => void,
       errback: (err: Error) => void
     ) => {
+      console.log(`transport ${side} connected`)
+
       conn
         .fetch("connectTransport", {
           dtlsParameters,
           transportId: tmpTransportData.id,
-          side: side === "producer" ? "send" : "recv",
+          side: side === "send" ? "send" : "recv",
         })
         .then(callback)
         .catch(errback)
@@ -65,7 +71,7 @@ export default async function createTransport(
         break
     }
   })
-  if (side === "producer") {
+  if (side === "send") {
     transport.on(
       "produce",
       async function ({ kind, rtpParameters }, callback, errback) {

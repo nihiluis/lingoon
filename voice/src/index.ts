@@ -144,7 +144,14 @@ async function main() {
         return
       }
 
-      const responseData = await createWebRtcTransport(room, peer, socketInfo)
+      const { side } = data
+
+      const responseData = await createWebRtcTransport(
+        room,
+        peer,
+        side,
+        socketInfo
+      )
       socketInfo.sendData("", responseData, fetchId)
     })
 
@@ -214,6 +221,11 @@ async function main() {
         return
       }
       const myPeer = getPeer(room)
+      const { rtpCapabilities } = data
+      if (!rtpCapabilities) {
+        console.error("rtpCapabilities must be passed")
+        return
+      }
 
       if (!myPeer) {
         return
@@ -223,12 +235,34 @@ async function main() {
 
       for (const theirPeerId of Object.keys(room.getPeers())) {
         const peerState = room.peers[theirPeerId]
-        peerState
         if (theirPeerId === myPeer.id || !peerState || !peerState.producer) {
           continue
         }
+        const producer = peerState.producer
+
+        console.log(
+          `creating consumer for mypeer ${myPeer.id}: ${theirPeerId} with recvTransportId ${myPeer.recvTransportId}`
+        )
+
+        const consumerParameters = await room.consume(
+          myPeer,
+          myPeer.recvTransportId,
+          producer.id,
+          rtpCapabilities
+        )
+
+        console.log(`created consumer returned params ${JSON.stringify(consumerParameters)}`)
+
+        consumerParametersArr.push({
+          peerId: theirPeerId,
+          consumerParameters,
+        })
       }
-      myPeer._transports
+
+      socketInfo.sendData("recv-tracks_cb", {
+        consumerParametersArr,
+        roomId: room.id,
+      })
     })
 
     registerMessage("consume", async (data, fetchId) => {

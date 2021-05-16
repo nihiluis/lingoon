@@ -76,13 +76,13 @@ export default function ChatVoice(props: Props) {
           return
         }
 
-        const consumerTransport = await createTransport(
-          "receiver",
+        const producerTransport = await createTransport(
+          "send",
           loadedDevice,
           conn
         )
-        const producerTransport = await createTransport(
-          "producer",
+        const consumerTransport = await createTransport(
+          "recv",
           loadedDevice,
           conn
         )
@@ -112,17 +112,20 @@ export default function ChatVoice(props: Props) {
       consumerQueue.current = []
     }
   }
-  conn.addListener<any>("you-joined", async data => {
-    // produce ws handler is called in createTransport, join should occur and could be tested?
-    console.log("handling you-joined")
 
-    // consumerQueue should be empty, will never be filled I think
-    receiveVoice(conn, () => flushConsumerQueue(data.roomId))
-  })
+  useEffect(() => {
+    conn.addListener<any>("you-joined", async data => {
+      // produce ws handler is called in createTransport, join should occur and could be tested?
+      console.log("handling you-joined")
 
-  conn.addListener<any>("speaker-joined", async data => {
-    console.log("handling speaker joined")
-  })
+      // consumerQueue should be empty, will never be filled I think
+      receiveVoice(conn, () => flushConsumerQueue(data.roomId))
+    })
+
+    conn.addListener<any>("speaker-joined", async data => {
+      console.log("handling speaker joined")
+    })
+  }, [conn])
 
   return (
     <div className="relative min-h-full">

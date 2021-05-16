@@ -25,6 +25,7 @@ export default async function produce(
     },
   ])
 
+  console.log("sending you-joined")
   socketInfo.sendData("you-joined", {
     roomId: room.id,
     peerId: peer.id,
